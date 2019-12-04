@@ -22,7 +22,7 @@
             ]
         },
         {
-            "name": "Arduino",
+            "name": "Arduino_Win",
             "browse": {
                 "path": [
                     "${workspaceFolder}",
