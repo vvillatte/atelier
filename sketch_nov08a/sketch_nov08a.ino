@@ -1,7 +1,6 @@
 // Set for debug or comment out
-//#define _DEBUG
+#define _DEBUG
 
-#include <Arduino.h>
 // Include Thread.h for multithreading
 //#define _MULTITHREAD
 #ifdef  _MULTITHREAD
