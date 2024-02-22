@@ -1,4 +1,3 @@
-```markdown
 # UK-NATS Drone Restriction Zones Updater
 
 This project contains Python scripts to download XML and KMZ files from a specific webpage and store them in a 'data' folder.
@@ -71,4 +70,3 @@ On Windows, you can use the Task Scheduler to run a script at regular intervals.
 8. On the "Finish" screen, review your settings, then click "Finish".
 
 Your Python script is now scheduled to run every 28 days. Please note that the user account you're logged in with must have the necessary permissions to run the Python script and the Task Scheduler.
-```
