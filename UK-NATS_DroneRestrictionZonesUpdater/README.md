@@ -29,7 +29,7 @@ import downloadKMZ
 XML_file_path = downloadXML.downloadXML()
 
 # Call the downloadKMZ function and get the file path
-kmz_file_path = downloadKMZ.downloadKMZ()
+KMZ_file_path = downloadKMZ.downloadKMZ()
 ```
 
 ## Author
