@@ -46,7 +46,7 @@ if (( current_time >= start_time && current_time < end_time )); then
                 /usr/sbin/usermod -U $username
                 echo "User account unlocked"
         else
-                echo "User account already locked"
+                echo "User account already unlocked"
         fi
 else
         if $is_locked; then

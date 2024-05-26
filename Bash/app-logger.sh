@@ -83,4 +83,4 @@ else
 fi
 
 # Display the content of the log file
-cat $log_file
+#cat $log_file
