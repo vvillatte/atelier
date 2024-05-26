@@ -1,0 +1,24 @@
+{
+    "user": {
+      "username": "ljvillatte",
+      "login": {
+        "monday": {"start": "07:00", "end": "20:00"},
+        "tuesday": {"start": "07:00", "end": "20:00"},
+        "wednesday": {"start": "07:00", "end": "20:00"},
+        "thursday": {"start": "07:00", "end": "20:00"},
+        "friday": {"start": "07:00", "end": "20:00"},
+        "saturday": {"start": "07:00", "end": "20:00"},
+        "sunday": {"start": "07:00", "end": "20:00"}
+      },
+      "application": {
+        "path": "/usr/bin/discord",
+        "monday": {"start": "16:00", "end": "19:00", "limit": "60"},
+        "tuesday": {"start": "16:00", "end": "19:00", "limit": "60"},
+        "wednesday": {"start": "16:00", "end": "19:00", "limit": "60"},
+        "thursday": {"start": "16:00", "end": "19:00", "limit": "60"},
+        "friday": {"start": "16:00", "end": "19:00", "limit": "60"},
+        "saturday": {"start": "08:00", "end": "19:00", "limit": "120"},
+        "sunday": {"start": "08:00", "end": "19:00", "limit": "120"}
+      }
+    }
+  }
