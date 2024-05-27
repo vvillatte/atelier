@@ -1,5 +1,9 @@
 #!/bin/bash
 
+#
+# Remaining work to do: calculate all application times first and pick the smallest value for the app - avoid multiple notifications
+#
+
 # Check if jq is installed
 if ! command -v jq &> /dev/null; then
   echo "jq could not be found. Please install it and try again."
