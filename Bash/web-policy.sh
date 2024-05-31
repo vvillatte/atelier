@@ -30,10 +30,12 @@ if [[ ! $url =~ $regex ]]; then
 fi
 
 # Check if the url exists in domain_whitelist.acl
-if ! grep -E "$url" "$acl_path"; then
+if ! grep -Eq "$url" "$acl_path"; then
     echo "Adding domain $url to $acl_path"
     echo "$url" >> "$acl_path"
 fi
+
+echo "Applying web policy to $url"
 
 # Get the current hour and minute
 current_time=$(date +%s)
@@ -42,16 +44,18 @@ current_time=$(date +%s)
 start_time=$(date -d"$2" +%s)
 end_time=$(date -d"$3" +%s)
 
+is_blocked=$(grep -Eq "^#.*$url" "$acl_path" && echo true || echo false)
+
 # Check if time is in range and if the url is commented out
 if (( current_time >= start_time && current_time < end_time )); then
-    if grep -Eq "^#.*$url" "$acl_path"; then
+    if [[ $is_blocked == "true" ]]; then
         sed -i "/^#.*$url/s/^#//" "$acl_path"
         echo "Domain $url is accessible"
     else
         echo "Domain $url already accessible"
     fi
 else
-    if grep -Eq "^#.*$url" "$acl_path"; then
+    if [[ $is_blocked == "true" ]]; then
         echo "Domain $url already blocked"
     else
         sed -i "/^$url/s/^/#/" "$acl_path"
