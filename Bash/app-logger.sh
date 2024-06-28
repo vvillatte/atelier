@@ -24,7 +24,7 @@ username=$1
 process_name=$2
 
 # Define the log file
-log_file="/var/log/$username-$process_name.log"
+log_file="/var/log/parental-controls/$username-$process_name.log"
 
 # Create the log file if it does not exist
 touch $log_file
@@ -83,4 +83,4 @@ else
 fi
 
 # Display the content of the log file
-#cat $log_file
+cat $log_file
