@@ -30,7 +30,7 @@ def rename_files(directory):
     files = glob.glob(os.path.join(directory, '*'))
 
     # Define the pattern that the files should match
-    pattern = re.compile(r'\d{8}_\d{6}(\(\d+\))?\..*')
+    pattern = re.compile(r'\d{8}_\d{6}.*\..*')
 
     # Filter the files that match the pattern
     files_to_rename = [file for file in files if pattern.match(os.path.basename(file))]
@@ -44,8 +44,8 @@ def rename_files(directory):
     for file in files_to_rename:
         # Extract the base name of the file and the file extension
         base_name, ext = os.path.splitext(os.path.basename(file))
-        # Remove the tag from the base name
-        base_name = re.sub(r'\(\d+\)', '', base_name)
+        # Remove anything after HHMMSS from the base name
+        base_name = re.sub(r'(\d{8}_\d{6}).*', r'\1', base_name)
         # Extract the date and time from the base name
         date, time = base_name.split('_')
         # Format the date and time
@@ -53,11 +53,12 @@ def rename_files(directory):
         formatted_time = f"{time[:2]}_{time[2:4]}_{time[4:6]}"
         # Create the new file name
         file_count += 1
-        new_name = f"{formatted_date}T{formatted_time}-{file_count:03}{ext}"
+        new_name = f"{formatted_date}T{formatted_time}-{file_count:06}{ext}"
         # Create the new file path
         new_path = os.path.join(directory, new_name)
         # Rename the file
         os.rename(file, new_path)
+        # print(f"{file} --> {new_path}")
         # Update the progress bar
         pbar.update(1)
 
