@@ -32,4 +32,6 @@
 *.app
 
 # Folders
-#.vscode/
+.idea/
+.vscode/
+.venv/
