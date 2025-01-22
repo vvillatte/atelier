@@ -2,24 +2,39 @@
 
 # Function to display help message
 function display_help {
-    echo "Usage: $0 -u username -g groupname -p permissions [-r] /path/to/start"
+    echo "Usage: $0 -u username -g groupname -p permissions [-rcv] /path/to/start"
     echo ""
     echo "Options:"
     echo "  -u  Username for chown"
     echo "  -g  Groupname for chown"
     echo "  -p  Permissions for chmod"
     echo "  -r  Perform the operation recursively"
+    echo "  -c  Clear Access Control Lists (ACLs)"
+    echo "  -v  Verbose output"
     echo "  -h  Display this help message"
+    echo ""
+    echo "Description:"
+    echo "  This script updates the ownership and permissions of files and directories."
+    echo "  - It takes a starting directory as input and processes all files and directories within it."
+    echo "  - You can specify the username and groupname for ownership, as well as the permissions."
+    echo "  - The script can operate recursively if the -r flag is provided."
+    echo "  - It can also clear any existing Access Control Lists (ACLs) if the -c flag is provided."
+    echo "  - The script provides verbose output if the -v flag is provided."
+    echo "  - Folders '@eaDir' and '#recycle' are excluded from the operation."
 }
 
 # Parse command line options
 recursive=false
-while getopts "u:g:p:rh" opt; do
+clear_acls=false
+verbose=false
+while getopts "u:g:p:rcvh" opt; do
     case $opt in
         u) username="$OPTARG" ;;
         g) groupname="$OPTARG" ;;
         p) permissions="$OPTARG" ;;
         r) recursive=true ;;
+        c) clear_acls=true ;;
+        v) verbose=true ;;
         h) display_help; exit 0 ;;
         ?) display_help; exit 1 ;;
     esac
@@ -47,11 +62,23 @@ fi
 # Function to update ownership and permissions
 update_ownership_permissions() {
     if $recursive; then
+        if $clear_acls; then
+            find "$1" -not -path "*/@eaDir/*" -not -path "*/#recycle/*" -exec setfacl -b {} \;
+            $verbose && echo "Cleared ACLs for files and directories in $1"
+        fi
         find "$1" -not -path "*/@eaDir/*" -not -path "*/#recycle/*" -exec chown "$username:$groupname" {} \;
+        $verbose && echo "Updated ownership to $username:$groupname for files and directories in $1"
         find "$1" -not -path "*/@eaDir/*" -not -path "*/#recycle/*" -exec chmod "$permissions" {} \;
+        $verbose && echo "Updated permissions to $permissions for files and directories in $1"
     else
+        if $clear_acls; then
+            setfacl -b "$1"
+            $verbose && echo "Cleared ACLs for $1"
+        fi
         chown "$username:$groupname" "$1"
+        $verbose && echo "Updated ownership to $username:$groupname for $1"
         chmod "$permissions" "$1"
+        $verbose && echo "Updated permissions to $permissions for $1"
     fi
 }
 
