@@ -20,7 +20,7 @@ function display_help {
     echo "  - The script can operate recursively if the -r flag is provided."
     echo "  - It can also clear any existing Access Control Lists (ACLs) if the -c flag is provided."
     echo "  - The script provides verbose output if the -v flag is provided."
-    echo "  - Folders '@eaDir' and '#recycle' are excluded from the operation."
+    echo "  - Folders '@eaDir' and '#recycle' and their contents are excluded from the operation."
     echo "  - If the username, group, or permissions are not provided, they are left untouched."
 }
 
@@ -69,28 +69,28 @@ update_ownership_permissions() {
 
     if $recursive; then
         if $clear_acls; then
-            find "$1" -not -path "*/@eaDir/*" -not -path "*/#recycle/*" -exec setfacl -b {} \;
+            find "$1" -type d \( -name "@eaDir" -o -name "#recycle" \) -prune -o -exec setfacl -b {} \;
             $verbose && echo "Cleared ACLs for files and directories in $1"
         fi
         if [ -n "$chown_cmd" ]; then
-            find "$1" -not -path "*/@eaDir/*" -not -path "*/#recycle/*" -exec chown "$chown_cmd" {} \;
+            find "$1" -type d \( -name "@eaDir" -o -name "#recycle" \) -prune -o -exec chown "$chown_cmd" {} \;
             $verbose && echo "Updated ownership to $chown_cmd for files and directories in $1"
         fi
         if [ -n "$permissions" ]; then
-            find "$1" -not -path "*/@eaDir/*" -not -path "*/#recycle/*" -exec chmod "$permissions" {} \;
+            find "$1" -type d \( -name "@eaDir" -o -name "#recycle" \) -prune -o -exec chmod "$permissions" {} \;
             $verbose && echo "Updated permissions to $permissions for files and directories in $1"
         fi
     else
         if $clear_acls; then
-            find "$1" -mindepth 1 -maxdepth 1 -not -path "*/@eaDir/*" -not -path "*/#recycle/*" -exec setfacl -b {} \;
+            find "$1" -mindepth 1 -maxdepth 1 -type d \( -name "@eaDir" -o -name "#recycle" \) -prune -o -exec setfacl -b {} \;
             $verbose && echo "Cleared ACLs for files and directories in $1"
         fi
         if [ -n "$chown_cmd" ]; then
-            find "$1" -mindepth 1 -maxdepth 1 -not -path "*/@eaDir/*" -not -path "*/#recycle/*" -exec chown "$chown_cmd" {} \;
+            find "$1" -mindepth 1 -maxdepth 1 -type d \( -name "@eaDir" -o -name "#recycle" \) -prune -o -exec chown "$chown_cmd" {} \;
             $verbose && echo "Updated ownership to $chown_cmd for files and directories in $1"
         fi
         if [ -n "$permissions" ]; then
-            find "$1" -mindepth 1 -maxdepth 1 -not -path "*/@eaDir/*" -not -path "*/#recycle/*" -exec chmod "$permissions" {} \;
+            find "$1" -mindepth 1 -maxdepth 1 -type d \( -name "@eaDir" -o -name "#recycle" \) -prune -o -exec chmod "$permissions" {} \;
             $verbose && echo "Updated permissions to $permissions for files and directories in $1"
         fi
     fi
