@@ -21,12 +21,16 @@ function display_help {
     echo "  - It can also clear any existing Access Control Lists (ACLs) if the -c flag is provided."
     echo "  - The script provides verbose output if the -v flag is provided."
     echo "  - Folders '@eaDir' and '#recycle' are excluded from the operation."
+    echo "  - If the username, group, or permissions are not provided, they are left untouched."
 }
 
 # Parse command line options
 recursive=false
 clear_acls=false
 verbose=false
+username=""
+groupname=""
+permissions=""
 while getopts "u:g:p:rcvh" opt; do
     case $opt in
         u) username="$OPTARG" ;;
@@ -52,33 +56,43 @@ fi
 
 START_DIR="$1"
 
-# Check if username, groupname, and permissions are provided
-if [ -z "$username" ] || [ -z "$groupname" ] || [ -z "$permissions" ]; then
-    echo "Error: Username, groupname, or permissions are missing."
-    display_help
-    exit 1
-fi
-
 # Function to update ownership and permissions
 update_ownership_permissions() {
+    chown_cmd=""
+    if [ -n "$username" ] && [ -n "$groupname" ]; then
+        chown_cmd="$username:$groupname"
+    elif [ -n "$username" ]; then
+        chown_cmd="$username:"
+    elif [ -n "$groupname" ]; then
+        chown_cmd=":$groupname"
+    fi
+
     if $recursive; then
         if $clear_acls; then
             find "$1" -not -path "*/@eaDir/*" -not -path "*/#recycle/*" -exec setfacl -b {} \;
             $verbose && echo "Cleared ACLs for files and directories in $1"
         fi
-        find "$1" -not -path "*/@eaDir/*" -not -path "*/#recycle/*" -exec chown "$username:$groupname" {} \;
-        $verbose && echo "Updated ownership to $username:$groupname for files and directories in $1"
-        find "$1" -not -path "*/@eaDir/*" -not -path "*/#recycle/*" -exec chmod "$permissions" {} \;
-        $verbose && echo "Updated permissions to $permissions for files and directories in $1"
+        if [ -n "$chown_cmd" ]; then
+            find "$1" -not -path "*/@eaDir/*" -not -path "*/#recycle/*" -exec chown "$chown_cmd" {} \;
+            $verbose && echo "Updated ownership to $chown_cmd for files and directories in $1"
+        fi
+        if [ -n "$permissions" ]; then
+            find "$1" -not -path "*/@eaDir/*" -not -path "*/#recycle/*" -exec chmod "$permissions" {} \;
+            $verbose && echo "Updated permissions to $permissions for files and directories in $1"
+        fi
     else
         if $clear_acls; then
             find "$1" -mindepth 1 -maxdepth 1 -not -path "*/@eaDir/*" -not -path "*/#recycle/*" -exec setfacl -b {} \;
             $verbose && echo "Cleared ACLs for files and directories in $1"
         fi
-        find "$1" -mindepth 1 -maxdepth 1 -not -path "*/@eaDir/*" -not -path "*/#recycle/*" -exec chown "$username:$groupname" {} \;
-        $verbose && echo "Updated ownership to $username:$groupname for files and directories in $1"
-        find "$1" -mindepth 1 -maxdepth 1 -not -path "*/@eaDir/*" -not -path "*/#recycle/*" -exec chmod "$permissions" {} \;
-        $verbose && echo "Updated permissions to $permissions for files and directories in $1"
+        if [ -n "$chown_cmd" ]; then
+            find "$1" -mindepth 1 -maxdepth 1 -not -path "*/@eaDir/*" -not -path "*/#recycle/*" -exec chown "$chown_cmd" {} \;
+            $verbose && echo "Updated ownership to $chown_cmd for files and directories in $1"
+        fi
+        if [ -n "$permissions" ]; then
+            find "$1" -mindepth 1 -maxdepth 1 -not -path "*/@eaDir/*" -not -path "*/#recycle/*" -exec chmod "$permissions" {} \;
+            $verbose && echo "Updated permissions to $permissions for files and directories in $1"
+        fi
     fi
 }
 
