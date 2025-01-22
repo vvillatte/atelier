@@ -73,14 +73,16 @@ update_ownership_permissions() {
             $verbose && echo "Updated permissions to $permissions for $file"
         done
     else
-        if $clear_acls; then
-            setfacl -b "$1"
-            $verbose && echo "Cleared ACLs for $1"
-        fi
-        chown "$username:$groupname" "$1"
-        $verbose && echo "Updated ownership to $username:$groupname for $1"
-        chmod "$permissions" "$1"
-        $verbose && echo "Updated permissions to $permissions for $1"
+        find "$1" -mindepth 1 -maxdepth 1 -not -path "*/@eaDir/*" -not -path "*/#recycle/*" | while read -r file; do
+            if $clear_acls; then
+                setfacl -b "$file"
+                $verbose && echo "Cleared ACLs for $file"
+            fi
+            chown "$username:$groupname" "$file"
+            $verbose && echo "Updated ownership to $username:$groupname for $file"
+            chmod "$permissions" "$file"
+            $verbose && echo "Updated permissions to $permissions for $file"
+        done
     fi
 }
 
