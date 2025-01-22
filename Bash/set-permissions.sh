@@ -62,14 +62,16 @@ fi
 # Function to update ownership and permissions
 update_ownership_permissions() {
     if $recursive; then
-        if $clear_acls; then
-            find "$1" -not -path "*/@eaDir/*" -not -path "*/#recycle/*" -exec setfacl -b {} \;
-            $verbose && echo "Cleared ACLs for files and directories in $1"
-        fi
-        find "$1" -not -path "*/@eaDir/*" -not -path "*/#recycle/*" -exec chown "$username:$groupname" {} \;
-        $verbose && echo "Updated ownership to $username:$groupname for files and directories in $1"
-        find "$1" -not -path "*/@eaDir/*" -not -path "*/#recycle/*" -exec chmod "$permissions" {} \;
-        $verbose && echo "Updated permissions to $permissions for files and directories in $1"
+        find "$1" -not -path "*/@eaDir/*" -not -path "*/#recycle/*" | while read -r file; do
+            if $clear_acls; then
+                setfacl -b "$file"
+                $verbose && echo "Cleared ACLs for $file"
+            fi
+            chown "$username:$groupname" "$file"
+            $verbose && echo "Updated ownership to $username:$groupname for $file"
+            chmod "$permissions" "$file"
+            $verbose && echo "Updated permissions to $permissions for $file"
+        done
     else
         if $clear_acls; then
             setfacl -b "$1"
