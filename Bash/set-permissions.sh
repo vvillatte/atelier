@@ -67,32 +67,40 @@ update_ownership_permissions() {
         chown_cmd=":$groupname"
     fi
 
+    process_file() {
+        file="$1"
+        if $verbose; then
+            echo "Processing: $file"
+            ls -ld "$file"
+        fi
+
+        if $clear_acls; then
+            setfacl -b "$file"
+            $verbose && echo "Cleared ACLs for $file"
+        fi
+        if [ -n "$chown_cmd" ]; then
+            chown "$chown_cmd" "$file"
+            $verbose && echo "Updated ownership to $chown_cmd for $file"
+        fi
+        if [ -n "$permissions" ]; then
+            chmod "$permissions" "$file"
+            $verbose && echo "Updated permissions to $permissions for $file"
+        fi
+
+        if $verbose; then
+            echo "Updated: $file"
+            ls -ld "$file"
+            echo ""
+        fi
+    }
+
+    export -f process_file
+    export chown_cmd clear_acls verbose permissions
+
     if $recursive; then
-        if $clear_acls; then
-            find "$1" -type d \( -name "@eaDir" -o -name "#recycle" \) -prune -o -exec setfacl -b {} \;
-            $verbose && echo "Cleared ACLs for files and directories in $1"
-        fi
-        if [ -n "$chown_cmd" ]; then
-            find "$1" -type d \( -name "@eaDir" -o -name "#recycle" \) -prune -o -exec chown "$chown_cmd" {} \;
-            $verbose && echo "Updated ownership to $chown_cmd for files and directories in $1"
-        fi
-        if [ -n "$permissions" ]; then
-            find "$1" -type d \( -name "@eaDir" -o -name "#recycle" \) -prune -o -exec chmod "$permissions" {} \;
-            $verbose && echo "Updated permissions to $permissions for files and directories in $1"
-        fi
+        find "$1" -type d \( -name "@eaDir" -o -name "#recycle" \) -prune -o -exec bash -c 'process_file "$0"' {} \;
     else
-        if $clear_acls; then
-            find "$1" -mindepth 1 -maxdepth 1 -type d \( -name "@eaDir" -o -name "#recycle" \) -prune -o -exec setfacl -b {} \;
-            $verbose && echo "Cleared ACLs for files and directories in $1"
-        fi
-        if [ -n "$chown_cmd" ]; then
-            find "$1" -mindepth 1 -maxdepth 1 -type d \( -name "@eaDir" -o -name "#recycle" \) -prune -o -exec chown "$chown_cmd" {} \;
-            $verbose && echo "Updated ownership to $chown_cmd for files and directories in $1"
-        fi
-        if [ -n "$permissions" ]; then
-            find "$1" -mindepth 1 -maxdepth 1 -type d \( -name "@eaDir" -o -name "#recycle" \) -prune -o -exec chmod "$permissions" {} \;
-            $verbose && echo "Updated permissions to $permissions for files and directories in $1"
-        fi
+        find "$1" -mindepth 1 -maxdepth 1 -type d \( -name "@eaDir" -o -name "#recycle" \) -prune -o -exec bash -c 'process_file "$0"' {} \;
     fi
 }
 
