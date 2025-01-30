@@ -7,7 +7,7 @@ from colorama import Fore, Style, init
 # Initialize colorama
 init(autoreset=True)
 
-def rename_photos(directory, test_mode):
+def rename_photos(directory, test_mode=False, verbose=False):
     """
     This function renames all files in a given directory from the pattern 'YYYYMMDD_HHMMSS.ext'
     to the pattern 'YYYY-MM-DDTHH_MM_SS-000001.ext', where 'ext' is any file extension.
@@ -15,7 +15,7 @@ def rename_photos(directory, test_mode):
     Args:
         directory (str): The directory containing the files to be renamed.
         test_mode (bool): If True, print the new names without renaming the files.
-
+        verbose (bool): If True, print detailed information about the operations.
     """
     # Check if the directory exists
     if not os.path.isdir(directory):
@@ -58,18 +58,17 @@ def rename_photos(directory, test_mode):
             formatted_time = f"{time[:2]}_{time[2:4]}_{time[4:6]}"
             # Create the new file name
             file_count += 1
-            new_name = f"{formatted_date}T{formatted_time}-{file_count:06}{ext}"
+            new_name = f"{formatted_date}T{formatted_time}-{file_count:06}{ext.lower()}"
             # Create the new file path
             new_path = os.path.join(directory, new_name)
             # Check if the new file name already exists
             if os.path.exists(new_path):
                 print(f"Error: The file {new_path} already exists.")
                 continue
-            if test_mode:
+            if test_mode or verbose:
                 print(file + " --> " + new_path)
-            else:
+            if not test_mode:
                 os.rename(file, new_path)
-                print(f"{file} --> {new_path}")
             # Update the progress bar
             pbar.update(1)
         except Exception as e:
@@ -81,18 +80,26 @@ def rename_photos(directory, test_mode):
 def main():
     """
     The main function that gets called when the script is run from the command line.
+    Prompts the user for the input directory and options if not provided.
     """
-    # Check if the arguments were passed
-    if len(sys.argv) < 2:
+    args = sys.argv[1:]
+
+    if args and args[0].startswith('-'):
+        switches = args[0]
+        directory = args[1] if len(args) > 1 else input("Please enter the directory where the photos are located: ")
+
+        test_mode = 't' in switches
+        verbose = 'v' in switches
+    else:
         directory = input("Please enter the directory where the photos are located: ")
         test_mode_input = input("Do you want to run in test mode? (y/n): ").lower()
-        test_mode = test_mode_input == 'y'
-    else:
-        directory = sys.argv[1]
-        test_mode = '-t' in sys.argv
+        verbose_input = input("Do you want to display detailed output? (y/n): ").lower()
 
-    # Call the rename_photos function with the directory and test_mode
-    rename_photos(directory, test_mode)
+        test_mode = test_mode_input == 'y'
+        verbose = verbose_input == 'y'
+
+    # Call the rename_photos function with the directory, test_mode, and verbose
+    rename_photos(directory, test_mode, verbose)
 
 if __name__ == "__main__":
     main()
