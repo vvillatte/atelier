@@ -39,6 +39,9 @@ def process_photos(source_folder, target_folder, test_mode, verbose):
         # Run the renamer function
         rename_photos(source_folder, test_mode=test_mode, verbose=verbose)
 
+        # Skip the mover function if in test mode
+        if test_mode:
+            print("Test mode enabled. The files are not actually renamed, so the mover function will skip the files.")
         # Run the mover function
         move_photos(source_folder, target_folder, test_mode=test_mode, verbose=verbose)
 
