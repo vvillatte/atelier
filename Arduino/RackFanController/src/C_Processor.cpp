@@ -41,10 +41,24 @@ void A_Processor::loop() {
 
     // --- Format humidity safely ---
     auto fmtHum = [](float h) {
-        String s = String(h, 1);   // e.g. "100.0"
-        if (s == "100.0") s = "100.";  // trim to avoid overflow
-        return s + "%";
+    String s = String(h, 1);   // e.g. "83.8", "76.5", "100.0"
+
+    // Trim "100.0" → "100"
+    if (s == "100.0") s = "100";
+
+    // Append %
+    s += "%";
+
+    // Add one extra space if shorter than "100%"
+    // "83.8%" → length 5 → no extra space
+    // "100%"  → length 4 → add space → "100% "
+    if (s.length() < 5) {
+        s += " ";
+    }
+
+    return s;
     };
+
 
     // --- Format temperature safely ---
     auto fmtTemp = [](float t) {
