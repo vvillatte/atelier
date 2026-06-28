@@ -38,6 +38,9 @@ public:
     virtual void pinMode(uint8_t pin, uint8_t mode) = 0;
     virtual void digitalWrite(uint8_t pin, uint8_t value) = 0;
     virtual unsigned long millis() = 0;
+
+    virtual void serialPrint(const String& s) = 0;
+    virtual void serialPrintLn(const String& s) = 0;
 };
 
 
@@ -57,6 +60,9 @@ public:
     void pinMode(uint8_t pin, uint8_t mode) override;
     void digitalWrite(uint8_t pin, uint8_t value) override;
     unsigned long millis() override;
+    
+    void serialPrint(const String& s) override;
+    void serialPrintLn(const String& s) override;
 
 private:
     // Pin ownership bitmask (supports up to 64 pins)

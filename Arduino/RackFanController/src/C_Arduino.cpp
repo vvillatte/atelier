@@ -4,7 +4,10 @@
    A_Arduino (Adapter)
    ============================ */
 
-A_Arduino::A_Arduino() {}
+A_Arduino::A_Arduino() {
+    Serial.begin(115200);
+    Serial.println("Serial interface initialized at 115200 baud");
+}
 
 /* ---- Pin Ownership ---- */
 
@@ -84,6 +87,15 @@ unsigned long A_Arduino::millis() {
     return ::millis();
 }
 
+/* ---- Serial passthrough ---- */
+
+void A_Arduino::serialPrint(const String& s) {
+    Serial.print(s);
+}
+
+void A_Arduino::serialPrintLn(const String& s) {
+    Serial.println(s);
+}
 
 /* ============================
    C_Arduino (Component)

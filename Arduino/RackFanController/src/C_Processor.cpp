@@ -68,6 +68,16 @@ void A_Processor::loop() {
     its_pLCD->clear();
     its_pLCD->printAt(0, 0, "T: " + fmtTemp(t1) + " / " + fmtTemp(t2));
     its_pLCD->printAt(0, 1, "H: " + fmtHum(h1) + " / " + fmtHum(h2));
+
+    // --- USB telemetry output ---
+    its_pArduino->serialPrint("T1:");
+    its_pArduino->serialPrint(String(t1, 1));
+    its_pArduino->serialPrint(",H1:");
+    its_pArduino->serialPrint(String(h1, 1));
+    its_pArduino->serialPrint(",T2:");
+    its_pArduino->serialPrint(String(t2, 1));
+    its_pArduino->serialPrint(",H2:");
+    its_pArduino->serialPrintLn(String(h2, 1));
 }
 
 
