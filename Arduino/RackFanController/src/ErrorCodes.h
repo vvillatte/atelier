@@ -1,0 +1,13 @@
+#ifndef _ERROR_CODES_H
+#define _ERROR_CODES_H
+
+enum ErrorCode {
+    ERR_OK = 0,
+    ERR_NULL_POINTER,
+    ERR_PIN_ALREADY_IN_USE,
+    ERR_SENSOR_INIT_FAILED,
+    ERR_LCD_INIT_FAILED,
+    ERR_INVALID_STATE
+};
+
+#endif

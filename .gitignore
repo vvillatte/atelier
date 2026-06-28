@@ -35,3 +35,7 @@
 .idea/
 .vscode/
 .venv/
+
+# cache files
+__pycache__
+__pycache__/*
