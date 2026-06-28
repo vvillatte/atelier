@@ -72,11 +72,11 @@ int A_Arduino::releasePin(uint8_t pin) {
 
 /* ---- Arduino API passthrough ---- */
 
-void A_Arduino::pinMode(uint8_t pin, PinMode mode) {
+void A_Arduino::pinMode(uint8_t pin, uint8_t mode) {
     ::pinMode(pin, mode);
 }
 
-void A_Arduino::digitalWrite(uint8_t pin, PinStatus value) {
+void A_Arduino::digitalWrite(uint8_t pin, uint8_t value) {
     ::digitalWrite(pin, value);
 }
 

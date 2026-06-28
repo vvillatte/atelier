@@ -35,8 +35,8 @@ public:
     virtual int requestPin(uint8_t pin) = 0;
     virtual int releasePin(uint8_t pin) = 0;
 
-    virtual void pinMode(uint8_t pin, PinMode mode) = 0;
-    virtual void digitalWrite(uint8_t pin, PinStatus value) = 0;
+    virtual void pinMode(uint8_t pin, uint8_t mode) = 0;
+    virtual void digitalWrite(uint8_t pin, uint8_t value) = 0;
     virtual unsigned long millis() = 0;
 };
 
@@ -54,8 +54,8 @@ public:
     int releasePin(uint8_t pin) override;
 
     // Arduino API passthrough
-    void pinMode(uint8_t pin, PinMode mode) override;
-    void digitalWrite(uint8_t pin, PinStatus value) override;
+    void pinMode(uint8_t pin, uint8_t mode) override;
+    void digitalWrite(uint8_t pin, uint8_t value) override;
     unsigned long millis() override;
 
 private:
