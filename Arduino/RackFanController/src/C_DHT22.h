@@ -5,25 +5,41 @@
 #include "ErrorCodes.h"
 #include <DHT.h>
 
+/* ============================
+   I_DHT22 (Interface)
+   ============================ */
+
 class I_DHT22 {
 public:
     virtual ~I_DHT22() = default;
+    virtual void begin() = 0;
     virtual float readTemperature() = 0;
     virtual float readHumidity() = 0;
 };
 
+
+/* ============================
+   A_DHT22 (Adapter)
+   ============================ */
+
 class A_DHT22 : public I_DHT22 {
 public:
-    A_DHT22(uint8_t pin, I_Arduino* arduino);
-    void begin();
+    A_DHT22(uint8_t pin, I_Arduino* its_pArduino);
+
+    void begin() override;
     float readTemperature() override;
     float readHumidity() override;
 
 private:
     DHT dht;
     uint8_t pin;
-    I_Arduino* arduino;
+    I_Arduino* its_pArduino;
 };
+
+
+/* ============================
+   C_DHT22 (Component)
+   ============================ */
 
 class C_DHT22 {
 public:
@@ -37,7 +53,8 @@ public:
 
 private:
     uint8_t pin;
-    I_Arduino* arduino = nullptr;
+
+    I_Arduino* its_pArduino = nullptr;
     A_DHT22* adapter = nullptr;
 };
 

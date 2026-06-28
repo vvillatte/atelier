@@ -1,62 +1,69 @@
 #include "C_Build.h"
 
 C_Build::C_Build()
-    : arduino(),
-      dhtInternal(2),
-      dhtExternal(4),
-      lcd(),
-      processor()
+    : its_Arduino(),
+      its_dhtInternal(2),
+      its_dhtExternal(4),
+      its_lcd(),
+      its_processor()
 {}
 
 void C_Build::begin() {
-    I_Arduino* arduinoPort = arduino.get_ItsIArduino();
+    I_Arduino* its_pArduino = its_Arduino.get_ItsIArduino();
 
-    if (!arduinoPort) {
+    if (!its_pArduino) {
         Serial.println("ERR: Arduino port null");
         return;
     }
 
-    if (dhtInternal.set_ItsIArduino(arduinoPort) != ERR_OK)
+    if (its_dhtInternal.set_ItsIArduino(its_pArduino) != ERR_OK)
         Serial.println("ERR: DHT1 Arduino wiring");
 
-    if (dhtExternal.set_ItsIArduino(arduinoPort) != ERR_OK)
+    if (its_dhtExternal.set_ItsIArduino(its_pArduino) != ERR_OK)
         Serial.println("ERR: DHT2 Arduino wiring");
 
-    if (lcd.set_ItsIArduino(arduinoPort) != ERR_OK)
+    if (its_lcd.set_ItsIArduino(its_pArduino) != ERR_OK)
         Serial.println("ERR: LCD Arduino wiring");
 
-    if (lcd.begin() != ERR_OK) {
+    if (its_lcd.begin() != ERR_OK) {
         Serial.println("ERR: LCD init");
         return;
     }
 
-    lcd.get_ItsILCD1602()->printAt(0, 0, "Init...");
-    lcd.get_ItsILCD1602()->printAt(0, 1, "Please wait");
+    its_lcd.get_ItsILCD1602()->printAt(0, 0, "Init...");
+    its_lcd.get_ItsILCD1602()->printAt(0, 1, "Please wait");
 
-    if (dhtInternal.begin() != ERR_OK) {
-        lcd.get_ItsILCD1602()->clear();
-        lcd.get_ItsILCD1602()->printAt(0, 0, "ERR: DHT1");
+    if (its_dhtInternal.begin() != ERR_OK) {
+        its_lcd.get_ItsILCD1602()->clear();
+        its_lcd.get_ItsILCD1602()->printAt(0, 0, "ERR: DHT1");
         return;
     }
 
-    if (dhtExternal.begin() != ERR_OK) {
-        lcd.get_ItsILCD1602()->clear();
-        lcd.get_ItsILCD1602()->printAt(0, 0, "ERR: DHT2");
+    if (its_dhtExternal.begin() != ERR_OK) {
+        its_lcd.get_ItsILCD1602()->clear();
+        its_lcd.get_ItsILCD1602()->printAt(0, 0, "ERR: DHT2");
         return;
     }
 
-    processor.set_ItsIInternalDHT22(dhtInternal.get_ItsIDHT22());
-    processor.set_ItsIExternalDHT22(dhtExternal.get_ItsIDHT22());
-    processor.set_ItsILCD(lcd.get_ItsILCD1602());
+    its_processor.set_ItsIInternalDHT22(its_dhtInternal.get_ItsIDHT22());
+    its_processor.set_ItsIExternalDHT22(its_dhtExternal.get_ItsIDHT22());
+    its_processor.set_ItsILCD(its_lcd.get_ItsILCD1602());
+    its_processor.set_ItsIArduino(its_pArduino);
 
-    lcd.get_ItsILCD1602()->clear();
-    lcd.get_ItsILCD1602()->printAt(0, 0, "System Ready");
+    if (its_processor.begin() != ERR_OK) {
+        its_lcd.get_ItsILCD1602()->clear();
+        its_lcd.get_ItsILCD1602()->printAt(0, 0, "ERR: Processor");
+        return;
+    }
+
+    its_lcd.get_ItsILCD1602()->clear();
+    its_lcd.get_ItsILCD1602()->printAt(0, 0, "System Ready");
 }
 
 C_Processor* C_Build::get_ItsCProcessor() {
-    return &processor;
+    return &its_processor;
 }
 
 I_Processor* C_Build::get_ItsIProcessor() {
-    return &processor;
+    return its_processor.get_ItsIProcessor();
 }

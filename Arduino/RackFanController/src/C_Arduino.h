@@ -24,46 +24,66 @@ enum PinCapability {
     PINCAP_SPECIAL
 };
 
+/* ============================
+   I_Arduino (Interface)
+   ============================ */
+
 class I_Arduino {
 public:
     virtual ~I_Arduino() = default;
+
+    virtual int requestPin(uint8_t pin) = 0;
+    virtual int releasePin(uint8_t pin) = 0;
 
     virtual void pinMode(uint8_t pin, PinMode mode) = 0;
     virtual void digitalWrite(uint8_t pin, PinStatus value) = 0;
     virtual unsigned long millis() = 0;
 };
 
+
+/* ============================
+   A_Arduino (Adapter)
+   ============================ */
+
 class A_Arduino : public I_Arduino {
 public:
     A_Arduino();
+
+    // Pin ownership API
+    int requestPin(uint8_t pin) override;
+    int releasePin(uint8_t pin) override;
+
+    // Arduino API passthrough
     void pinMode(uint8_t pin, PinMode mode) override;
     void digitalWrite(uint8_t pin, PinStatus value) override;
     unsigned long millis() override;
+
+private:
+    // Pin ownership bitmask (supports up to 64 pins)
+    uint64_t pinMask = 0ULL;
+
+    // Private helpers
+    bool reservePin(uint8_t pin);
+    void freePin(uint8_t pin);
+
+    bool isValidPin(uint8_t pin) const;
+    PinCapability getPinCapability(uint8_t pin) const;
 };
+
+
+/* ============================
+   C_Arduino (Component)
+   ============================ */
 
 class C_Arduino {
 public:
     C_Arduino();
-
-    int requestPin(uint8_t pin);
-    int releasePin(uint8_t pin);
 
     I_Arduino* get_ItsIArduino();
     C_Arduino* get_ItsCArduino();
 
 private:
     A_Arduino adapter;
-
-    // Bitmask for pin ownership (supports up to 64 pins)
-    uint64_t pinMask;
-
-    // Private helpers
-    bool reservePin(uint8_t pin);
-    void freePin(uint8_t pin);
-
-    // Capability validation
-    bool isValidPin(uint8_t pin) const;
-    PinCapability getPinCapability(uint8_t pin) const;
 };
 
 #endif

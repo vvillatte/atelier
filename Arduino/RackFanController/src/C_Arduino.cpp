@@ -1,32 +1,26 @@
 #include "C_Arduino.h"
 
+/* ============================
+   A_Arduino (Adapter)
+   ============================ */
+
 A_Arduino::A_Arduino() {}
 
-void A_Arduino::pinMode(uint8_t pin, PinMode mode) {
-    ::pinMode(pin, mode);
-}
+/* ---- Pin Ownership ---- */
 
-void A_Arduino::digitalWrite(uint8_t pin, PinStatus value) {
-    ::digitalWrite(pin, value);
-}
-
-unsigned long A_Arduino::millis() {
-    return ::millis();
-}
-
-C_Arduino::C_Arduino()
-    : adapter(), pinMask(0ULL) {}
-
-bool C_Arduino::isValidPin(uint8_t pin) const {
+bool A_Arduino::isValidPin(uint8_t pin) const {
     // AVR UNO: pins 0–19 exist (0–13 digital, 14–19 analog)
     return pin < 20;
 }
 
-PinCapability C_Arduino::getPinCapability(uint8_t pin) const {
+PinCapability A_Arduino::getPinCapability(uint8_t pin) const {
     if (pin <= 13) {
         // PWM pins on UNO: 3, 5, 6, 9, 10, 11
-        if (pin == 3 || pin == 5 || pin == 6 || pin == 9 || pin == 10 || pin == 11)
+        if (pin == 3 || pin == 5 || pin == 6 ||
+            pin == 9 || pin == 10 || pin == 11)
+        {
             return PINCAP_PWM;
+        }
         return PINCAP_DIGITAL;
     }
 
@@ -36,7 +30,7 @@ PinCapability C_Arduino::getPinCapability(uint8_t pin) const {
     return PINCAP_SPECIAL;
 }
 
-bool C_Arduino::reservePin(uint8_t pin) {
+bool A_Arduino::reservePin(uint8_t pin) {
     if (!isValidPin(pin)) {
         LOG("Invalid pin requested");
         return false;
@@ -55,7 +49,7 @@ bool C_Arduino::reservePin(uint8_t pin) {
     return true;
 }
 
-void C_Arduino::freePin(uint8_t pin) {
+void A_Arduino::freePin(uint8_t pin) {
     if (!isValidPin(pin)) {
         LOG("Invalid pin released");
         return;
@@ -67,17 +61,36 @@ void C_Arduino::freePin(uint8_t pin) {
     LOG(String("Released pin ") + pin);
 }
 
-int C_Arduino::requestPin(uint8_t pin) {
-    if (!reservePin(pin)) {
-        return ERR_PIN_ALREADY_IN_USE;
-    }
-    return ERR_OK;
+int A_Arduino::requestPin(uint8_t pin) {
+    return reservePin(pin) ? ERR_OK : ERR_PIN_ALREADY_IN_USE;
 }
 
-int C_Arduino::releasePin(uint8_t pin) {
+int A_Arduino::releasePin(uint8_t pin) {
     freePin(pin);
     return ERR_OK;
 }
+
+/* ---- Arduino API passthrough ---- */
+
+void A_Arduino::pinMode(uint8_t pin, PinMode mode) {
+    ::pinMode(pin, mode);
+}
+
+void A_Arduino::digitalWrite(uint8_t pin, PinStatus value) {
+    ::digitalWrite(pin, value);
+}
+
+unsigned long A_Arduino::millis() {
+    return ::millis();
+}
+
+
+/* ============================
+   C_Arduino (Component)
+   ============================ */
+
+C_Arduino::C_Arduino()
+    : adapter() {}
 
 I_Arduino* C_Arduino::get_ItsIArduino() {
     return &adapter;

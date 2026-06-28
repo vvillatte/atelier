@@ -3,7 +3,12 @@
 
 #include "C_DHT22.h"
 #include "C_LCD1602I2C.h"
+#include "C_Arduino.h"
 #include "ErrorCodes.h"
+
+/* ============================
+   I_Processor (Interface)
+   ============================ */
 
 class I_Processor {
 public:
@@ -11,25 +16,55 @@ public:
     virtual void loop() = 0;
 };
 
-class C_Processor : public I_Processor {
+
+/* ============================
+   A_Processor (Adapter)
+   ============================ */
+
+class A_Processor : public I_Processor {
+public:
+    A_Processor(I_DHT22* its_pInternal,
+                I_DHT22* its_pExternal,
+                I_LCD1602* its_pLCD,
+                I_Arduino* its_pArduino);
+
+    void loop() override;
+
+private:
+    I_DHT22*   its_pInternal;
+    I_DHT22*   its_pExternal;
+    I_LCD1602* its_pLCD;
+    I_Arduino* its_pArduino;
+
+    unsigned long lastSample = 0;
+};
+
+
+/* ============================
+   C_Processor (Component)
+   ============================ */
+
+class C_Processor {
 public:
     C_Processor();
 
     int set_ItsIInternalDHT22(I_DHT22* p);
     int set_ItsIExternalDHT22(I_DHT22* p);
     int set_ItsILCD(I_LCD1602* p);
+    int set_ItsIArduino(I_Arduino* p);
 
-    void loop() override;
+    int begin();
 
-    C_Processor* get_ItsCProcessor();
     I_Processor* get_ItsIProcessor();
+    C_Processor* get_ItsCProcessor();
 
 private:
-    I_DHT22* internal = nullptr;
-    I_DHT22* external = nullptr;
-    I_LCD1602* lcd = nullptr;
+    I_DHT22*   its_pInternal = nullptr;
+    I_DHT22*   its_pExternal = nullptr;
+    I_LCD1602* its_pLCD      = nullptr;
+    I_Arduino* its_pArduino  = nullptr;
 
-    unsigned long lastSample;
+    A_Processor* adapter = nullptr;
 };
 
 #endif
