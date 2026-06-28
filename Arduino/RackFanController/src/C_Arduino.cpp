@@ -2,11 +2,11 @@
 
 A_Arduino::A_Arduino() {}
 
-void A_Arduino::pinMode(uint8_t pin, uint8_t mode) {
+void A_Arduino::pinMode(uint8_t pin, PinMode mode) {
     ::pinMode(pin, mode);
 }
 
-void A_Arduino::digitalWrite(uint8_t pin, uint8_t value) {
+void A_Arduino::digitalWrite(uint8_t pin, PinStatus value) {
     ::digitalWrite(pin, value);
 }
 
@@ -26,14 +26,14 @@ PinCapability C_Arduino::getPinCapability(uint8_t pin) const {
     if (pin <= 13) {
         // PWM pins on UNO: 3, 5, 6, 9, 10, 11
         if (pin == 3 || pin == 5 || pin == 6 || pin == 9 || pin == 10 || pin == 11)
-            return PIN_PWM;
-        return PIN_DIGITAL;
+            return PINCAP_PWM;
+        return PINCAP_DIGITAL;
     }
 
     if (pin >= 14 && pin <= 19)
-        return PIN_ANALOG;
+        return PINCAP_ANALOG;
 
-    return PIN_SPECIAL;
+    return PINCAP_SPECIAL;
 }
 
 bool C_Arduino::reservePin(uint8_t pin) {

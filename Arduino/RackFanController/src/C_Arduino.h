@@ -15,29 +15,29 @@
 
 // Pin capability categories
 enum PinCapability {
-    PIN_DIGITAL,
-    PIN_ANALOG,
-    PIN_PWM,
-    PIN_I2C,
-    PIN_SPI,
-    PIN_UART,
-    PIN_SPECIAL
+    PINCAP_DIGITAL,
+    PINCAP_ANALOG,
+    PINCAP_PWM,
+    PINCAP_I2C,
+    PINCAP_SPI,
+    PINCAP_UART,
+    PINCAP_SPECIAL
 };
 
 class I_Arduino {
 public:
     virtual ~I_Arduino() = default;
 
-    virtual void pinMode(uint8_t pin, uint8_t mode) = 0;
-    virtual void digitalWrite(uint8_t pin, uint8_t value) = 0;
+    virtual void pinMode(uint8_t pin, PinMode mode) = 0;
+    virtual void digitalWrite(uint8_t pin, PinStatus value) = 0;
     virtual unsigned long millis() = 0;
 };
 
 class A_Arduino : public I_Arduino {
 public:
     A_Arduino();
-    void pinMode(uint8_t pin, uint8_t mode) override;
-    void digitalWrite(uint8_t pin, uint8_t value) override;
+    void pinMode(uint8_t pin, PinMode mode) override;
+    void digitalWrite(uint8_t pin, PinStatus value) override;
     unsigned long millis() override;
 };
 
