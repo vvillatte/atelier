@@ -2,7 +2,7 @@
 #define _C_PROCESSOR_H
 
 #include "C_DHT22.h"
-#include "C_LCD1602I2C.h"
+#include "C_Display.h"
 #include "C_Arduino.h"
 #include "ErrorCodes.h"
 
@@ -25,7 +25,7 @@ class A_Processor : public I_Processor {
 public:
     A_Processor(I_DHT22* its_pInternal,
                 I_DHT22* its_pExternal,
-                I_LCD1602* its_pLCD,
+                I_Display* its_pDisplay,
                 I_Arduino* its_pArduino);
 
     void loop() override;
@@ -33,7 +33,7 @@ public:
 private:
     I_DHT22*   its_pInternal;
     I_DHT22*   its_pExternal;
-    I_LCD1602* its_pLCD;
+    I_Display* its_pDisplay;
     I_Arduino* its_pArduino;
 
     unsigned long lastSample = 0;
@@ -50,7 +50,7 @@ public:
 
     int set_ItsIInternalDHT22(I_DHT22* p);
     int set_ItsIExternalDHT22(I_DHT22* p);
-    int set_ItsILCD(I_LCD1602* p);
+    int set_ItsIDisplay(I_Display* p);
     int set_ItsIArduino(I_Arduino* p);
 
     int begin();
@@ -61,7 +61,7 @@ public:
 private:
     I_DHT22*   its_pInternal = nullptr;
     I_DHT22*   its_pExternal = nullptr;
-    I_LCD1602* its_pLCD      = nullptr;
+    I_Display* its_pDisplay  = nullptr;
     I_Arduino* its_pArduino  = nullptr;
 
     A_Processor* adapter = nullptr;
