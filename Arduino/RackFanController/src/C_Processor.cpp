@@ -54,8 +54,24 @@ void A_Processor::loop() {
     };
 
     its_pDisplay->clear();
-    its_pDisplay->printAt(0, 0,  "T: " + fmtTemp(t1) + " / " + fmtTemp(t2));
-    its_pDisplay->printAt(0, 10, "H: " + fmtHum(h1) + " / " + fmtHum(h2));
+
+    switch (its_pDisplay->getDisplayType()) {
+
+        case DISPLAY_LCD1602:
+            // LCD: 2 rows, character grid
+            its_pDisplay->printAt(0, 0, "T:" + fmtTemp(t1) + "/" + fmtTemp(t2));
+            its_pDisplay->printAt(0, 1, "H:" + fmtHum(h1) + "/" + fmtHum(h2));
+            break;
+
+        case DISPLAY_OLED12864:
+            // OLED: 128x64 pixels, 8px text height
+            its_pDisplay->printAt(0, 0,  "T1: " + fmtTemp(t1));
+            its_pDisplay->printAt(0, 10, "T2: " + fmtTemp(t2));
+            its_pDisplay->printAt(0, 20, "H1: " + fmtHum(h1));
+            its_pDisplay->printAt(0, 30, "H2: " + fmtHum(h2));
+            break;
+    }
+
     its_pDisplay->refresh();
 
     its_pArduino->serialPrint("T1:");

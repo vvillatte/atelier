@@ -19,6 +19,7 @@ public:
     virtual void clear() = 0;
     virtual void printAt(uint8_t x, uint8_t y, const String& text) = 0;
     virtual void display() = 0;
+    virtual void setTextSize(uint8_t size) = 0;
 };
 
 
@@ -35,6 +36,7 @@ public:
     void clear() override;
     void printAt(uint8_t x, uint8_t y, const String& text) override;
     void display() override;
+    void setTextSize(uint8_t size) override;
 
 private:
     Adafruit_SSD1306 oled;

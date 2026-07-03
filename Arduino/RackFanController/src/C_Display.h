@@ -10,6 +10,15 @@
 #define USE_OLED_DISPLAY   1   // 1 = OLED12864_SSD1306, 0 = LCD1602I2C
 
 /* ============================
+   DisplayType enum
+   ============================ */
+
+enum DisplayType {
+    DISPLAY_LCD1602,
+    DISPLAY_OLED12864
+};
+
+/* ============================
    I_Display (Unified Interface)
    ============================ */
 
@@ -20,7 +29,9 @@ public:
     virtual void init() = 0;
     virtual void clear() = 0;
     virtual void printAt(uint8_t x, uint8_t y, const String& text) = 0;
-    virtual void refresh() = 0;   // LCD1602: no-op, OLED: calls display()
+    virtual void refresh() = 0;
+    virtual void setTextSize(uint8_t size) = 0;
+    virtual DisplayType getDisplayType() const = 0;
 };
 
 
@@ -46,7 +57,15 @@ public:
     }
 
     void refresh() override {
-        // LCD1602 does not need a refresh
+        // LCD1602 does not need a refresh - NOOP
+    }
+
+    void setTextSize(uint8_t size) override {
+        // LCD1602 does not support text scaling — NOOP
+    }
+
+    DisplayType getDisplayType() const override {
+        return DISPLAY_LCD1602;
     }
 
 private:
@@ -78,6 +97,14 @@ public:
 
     void refresh() override {
         oled->display();
+    }
+
+    void setTextSize(uint8_t size) override {
+        oled->setTextSize(size);
+    }
+
+    DisplayType getDisplayType() const override {
+        return DISPLAY_OLED12864;
     }
 
 private:

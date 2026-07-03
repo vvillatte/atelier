@@ -36,6 +36,9 @@ void A_OLED12864_SSD1306::display() {
     oled.display();
 }
 
+void A_OLED12864_SSD1306::setTextSize(uint8_t size) {
+    oled.setTextSize(size);
+}
 
 /* ============================
    C_OLED12864_SSD1306 (Component)
