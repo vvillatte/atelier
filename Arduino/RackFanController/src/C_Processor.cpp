@@ -1,6 +1,35 @@
 #include "C_Processor.h"
 
 /* ============================
+   Optimal statis formatting
+   for temperature and humidity
+   ============================ */
+
+static void formatTemp(char* buf, int v) {
+    int iv = v / 10;
+    int dv = v % 10;
+
+    buf[0] = '0' + (iv / 10);
+    buf[1] = '0' + (iv % 10);
+    buf[2] = '.';
+    buf[3] = '0' + dv;
+    buf[4] = '\0';
+}
+
+static void formatHum(char* buf, int v) {
+    int iv = v / 10;
+    int dv = v % 10;
+
+    buf[0] = '0' + (iv / 10);
+    buf[1] = '0' + (iv % 10);
+    buf[2] = '.';
+    buf[3] = '0' + dv;
+    buf[4] = '%';
+    buf[5] = '\0';
+}
+
+
+/* ============================
    A_Processor (Adapter)
    ============================ */
 
@@ -16,10 +45,13 @@ A_Processor::A_Processor(I_DHT22* pI_DHT22_1,
 {}
 
 void A_Processor::loop() {
-    if (!pItsDHT22_1Interface || !pItsDHT22_2Interface || !pItsDisplayInterface || !pItsArduinoInterface) {
+
+    if (!pItsDHT22_1Interface || !pItsDHT22_2Interface ||
+        !pItsDisplayInterface || !pItsArduinoInterface)
+    {
         pItsDisplayInterface->clear();
-        pItsDisplayInterface->printAt(0, 0, "ERR: Ports");
-        pItsDisplayInterface->printAt(0, 10, "not wired");
+        pItsDisplayInterface->printAt(0, 0, DISP_ERR_PORTS);
+        pItsDisplayInterface->printAt(0, 10, DISP_ERR_NOT_WIRED);
         pItsDisplayInterface->refresh();
         return;
     }
@@ -28,61 +60,81 @@ void A_Processor::loop() {
     if (now - lastSample < 10000) return;
     lastSample = now;
 
-    float t1 = pItsDHT22_1Interface->readTemperature();
-    float h1 = pItsDHT22_1Interface->readHumidity();
-    float t2 = pItsDHT22_2Interface->readTemperature();
-    float h2 = pItsDHT22_2Interface->readHumidity();
+    int t1 = pItsDHT22_1Interface->readTemperature();
+    int h1 = pItsDHT22_1Interface->readHumidity();
+    int t2 = pItsDHT22_2Interface->readTemperature();
+    int h2 = pItsDHT22_2Interface->readHumidity();
 
     if (isnan(t1) || isnan(h1) || isnan(t2) || isnan(h2)) {
         pItsDisplayInterface->clear();
-        pItsDisplayInterface->printAt(0, 0, "ERR: Sensor");
-        pItsDisplayInterface->printAt(0, 10, "read fail");
+        pItsDisplayInterface->printAt(0, 0, DISP_ERR_SENSOR);
+        pItsDisplayInterface->printAt(0, 10, DISP_ERR_READ_FAIL);
         pItsDisplayInterface->refresh();
         return;
     }
 
-    auto fmtHum = [](float h) {
-        String s = String(h, 1);
-        if (s == "100.0") s = "100";
-        s += "%";
-        if (s.length() < 5) s += " ";
-        return s;
-    };
+    // --- Format buffers ---
+    char t1buf[8], t2buf[8], h1buf[8], h2buf[8];
 
-    auto fmtTemp = [](float t) {
-        return String(t, 1) + "C";
-    };
+    formatTemp(t1buf, t1);
+    formatTemp(t2buf, t2);
+    formatHum(h1buf, h1);
+    formatHum(h2buf, h2);
+
+    if (strcmp(h1buf, "100.0") == 0) strcpy(h1buf, "100");
+    if (strcmp(h2buf, "100.0") == 0) strcpy(h2buf, "100");
 
     pItsDisplayInterface->clear();
 
-    switch (pItsDisplayInterface->getDisplayType()) {
+    // ============================================================
+    // OLED‑only build
+    // ============================================================
+#ifdef USE_OLED_DISPLAY
 
-        case DISPLAY_LCD:
-            // LCD: 2 rows, character grid
-            pItsDisplayInterface->printAt(0, 0, "T:" + fmtTemp(t1) + " / " + fmtTemp(t2));
-            pItsDisplayInterface->printAt(0, 1, "H:" + fmtHum(h1) + " / " + fmtHum(h2));
-            break;
+    // Clear screen
+    pItsDisplayInterface->clear();
 
-        case DISPLAY_OLED:
-            // OLED: 128x64 pixels, 8px text height
-            pItsDisplayInterface->printAt(0, 0,  "T1: " + fmtTemp(t1));
-            pItsDisplayInterface->printAt(0, 10, "T2: " + fmtTemp(t2));
-            pItsDisplayInterface->printAt(0, 20, "H1: " + fmtHum(h1));
-            pItsDisplayInterface->printAt(0, 30, "H2: " + fmtHum(h2));
-            break;
-    }
+    pItsDisplayInterface->setTextSize(OLED_TEXT_SIZE_MEDIUM);
+    pItsDisplayInterface->printAt(22, 0,  DISP_HEADER);   // Centred
+
+    // --- Temperature (bright) ---
+    pItsDisplayInterface->printAt(0, 20, t1buf);
+    pItsDisplayInterface->printAt(68, 20, h1buf);
+
+    // --- Humidity (dim) ---
+    pItsDisplayInterface->printAt(0, 36, t2buf);
+    pItsDisplayInterface->printAt(68, 36, h2buf);
+#else
+
+    // ============================================================
+    // LCD‑only build
+    // ============================================================
+
+    char line1[20];
+    char line2[20];
+
+    snprintf(line1, sizeof(line1), "T:%s / %s", t1buf, t2buf);
+    snprintf(line2, sizeof(line2), "H:%s / %s", h1buf, h2buf);
+
+    pItsDisplayInterface->printAt(0, 0, line1);
+    pItsDisplayInterface->printAt(0, 1, line2);
+
+#endif
 
     pItsDisplayInterface->refresh();
 
-    pItsArduinoInterface->serialPrint("T1:");
-    pItsArduinoInterface->serialPrint(String(t1, 1));
-    pItsArduinoInterface->serialPrint(",H1:");
-    pItsArduinoInterface->serialPrint(String(h1, 1));
-    pItsArduinoInterface->serialPrint(",T2:");
-    pItsArduinoInterface->serialPrint(String(t2, 1));
-    pItsArduinoInterface->serialPrint(",H2:");
-    pItsArduinoInterface->serialPrintLn(String(h2, 1));
+    // --- Serial output ---
+    pItsArduinoInterface->serialPrint(SER_T1);
+    pItsArduinoInterface->serialPrint(t1buf);
+    pItsArduinoInterface->serialPrint(SER_H1);
+    pItsArduinoInterface->serialPrint(h1buf);
+    pItsArduinoInterface->serialPrint(SER_T2);
+    pItsArduinoInterface->serialPrint(t2buf);
+    pItsArduinoInterface->serialPrint(SER_H2);
+    pItsArduinoInterface->serialPrintLn(h2buf);
 }
+
+
 
 
 /* ============================

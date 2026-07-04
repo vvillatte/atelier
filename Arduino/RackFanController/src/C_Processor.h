@@ -6,6 +6,19 @@
 #include "C_Arduino.h"
 #include "ErrorCodes.h"
 
+#define DISP_ERR_PORTS F("ERR: Ports")
+#define DISP_ERR_NOT_WIRED F("not wired")
+#define DISP_ERR_SENSOR F("ERR: Sensor")
+#define DISP_ERR_READ_FAIL F("read fail")
+
+#define DISP_HEADER F("RACKMON")
+
+#define SER_T1   F("T1:")
+#define SER_H1   F(",H1:")
+#define SER_T2   F(",T2:")
+#define SER_H2   F(",H2:")
+
+
 /* ============================
    I_Processor (Interface)
    ============================ */

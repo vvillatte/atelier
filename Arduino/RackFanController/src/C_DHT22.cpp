@@ -15,12 +15,12 @@ void A_DHT22::begin() {
     dht.begin();
 }
 
-float A_DHT22::readTemperature() {
-    return dht.readTemperature();
+int A_DHT22::readTemperature() {
+    return (int)(dht.readTemperature()*10);
 }
 
-float A_DHT22::readHumidity() {
-    return dht.readHumidity();
+int A_DHT22::readHumidity() {
+    return (int)(dht.readHumidity()*10);
 }
 
 

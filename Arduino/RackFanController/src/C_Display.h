@@ -11,6 +11,8 @@
     #include <LiquidCrystal_I2C.h>
 #endif
 
+#define MSG_ERR_INIT F("[DISPLAY] OLED init failed")
+
 /* ============================
    DisplayType enum
    ============================ */
@@ -19,6 +21,19 @@ enum DisplayType {
     DISPLAY_LCD,
     DISPLAY_OLED
 };
+
+/* ============================
+   Constants
+   ============================ */
+
+constexpr uint8_t LCD_ADDR = 0x27;
+constexpr uint8_t LCD_COLS = 16;
+constexpr uint8_t LCD_ROWS = 2;
+constexpr uint8_t OLED_ADDR = 0x3C;
+constexpr uint8_t OLED_WIDTH = 128;
+constexpr uint8_t OLED_HEIGHT = 64;
+constexpr uint8_t OLED_TEXT_SIZE_SMALL = 1;
+constexpr uint8_t OLED_TEXT_SIZE_MEDIUM = 2;
 
 /* ============================
    I_Display (Unified Interface)
@@ -30,7 +45,9 @@ public:
 
     virtual void init() = 0;
     virtual void clear() = 0;
-    virtual void printAt(uint8_t x, uint8_t y, const String& text) = 0;
+    virtual void printAt(uint8_t x, uint8_t y, const char* text) = 0;
+    virtual void printAt(uint8_t x, uint8_t y, const __FlashStringHelper* text) = 0;
+    // virtual void printAt(uint8_t x, uint8_t y, const String& text) = 0;
     virtual void refresh() = 0;
     virtual void setTextSize(uint8_t size) = 0;
     virtual DisplayType getDisplayType() const = 0;
@@ -46,7 +63,9 @@ public:
 
     void init() override;
     void clear() override;
-    void printAt(uint8_t x, uint8_t y, const String& text) override;
+    void printAt(uint8_t x, uint8_t y, const char* text) override;
+    void printAt(uint8_t x, uint8_t y, const __FlashStringHelper* text) override;
+    // void printAt(uint8_t x, uint8_t y, const String& text) override;
     void refresh() override;
     void setTextSize(uint8_t size) override;
     DisplayType getDisplayType() const override;

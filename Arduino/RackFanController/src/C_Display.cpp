@@ -6,22 +6,22 @@
 
 A_Display::A_Display()
 #if USE_OLED_DISPLAY
-    : oled(128, 64, &Wire)
+    : oled(OLED_WIDTH, OLED_HEIGHT, &Wire)
 #else
-    : lcd(0x27, 16, 2)
+    : lcd(LCD_ADDR, LCD_COLS, LCD_ROWS)
 #endif
 {}
 
 void A_Display::init() {
 #if USE_OLED_DISPLAY
     Wire.begin();
-    if (!oled.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-        Serial.println("[DISPLAY] OLED init failed");
+    if (!oled.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR)) {
+        Serial.println(MSG_ERR_INIT);
         return;
     }
     oledReady = true;
     oled.clearDisplay();
-    oled.setTextSize(1);
+    oled.setTextSize(OLED_TEXT_SIZE_SMALL);
     oled.setTextColor(SSD1306_WHITE);
 #else
     lcd.init();
@@ -37,7 +37,7 @@ void A_Display::clear() {
 #endif
 }
 
-void A_Display::printAt(uint8_t x, uint8_t y, const String& text) {
+void A_Display::printAt(uint8_t x, uint8_t y, const char* text) {
 #if USE_OLED_DISPLAY
     oled.setCursor(x, y);
     oled.print(text);
@@ -46,6 +46,26 @@ void A_Display::printAt(uint8_t x, uint8_t y, const String& text) {
     lcd.print(text);
 #endif
 }
+
+void A_Display::printAt(uint8_t x, uint8_t y, const __FlashStringHelper* text) {
+#if USE_OLED_DISPLAY
+    oled.setCursor(x, y);
+    oled.print(text);
+#else
+    lcd.setCursor(x, y);
+    lcd.print(text);
+#endif
+}
+
+// void A_Display::printAt(uint8_t x, uint8_t y, const String& text) {
+// #if USE_OLED_DISPLAY
+//     oled.setCursor(x, y);
+//     oled.print(text);
+// #else
+//     lcd.setCursor(x, y);
+//     lcd.print(text);
+// #endif
+// }
 
 void A_Display::refresh() {
 #if USE_OLED_DISPLAY

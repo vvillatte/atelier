@@ -13,8 +13,8 @@ class I_DHT22 {
 public:
     virtual ~I_DHT22() = default;
     virtual void begin() = 0;
-    virtual float readTemperature() = 0;
-    virtual float readHumidity() = 0;
+    virtual int readTemperature() = 0;
+    virtual int readHumidity() = 0;
 };
 
 
@@ -27,8 +27,8 @@ public:
     A_DHT22(uint8_t pin, I_Arduino* p_IArduino);
 
     void begin() override;
-    float readTemperature() override;
-    float readHumidity() override;
+    int readTemperature() override;
+    int readHumidity() override;
 
 private:
     DHT dht;

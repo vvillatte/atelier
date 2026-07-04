@@ -87,13 +87,29 @@ unsigned long A_Arduino::millis() {
 
 /* ---- Serial passthrough ---- */
 
-void A_Arduino::serialPrint(const String& s) {
+void A_Arduino::serialPrint(const char* s) {
     Serial.print(s);
 }
 
-void A_Arduino::serialPrintLn(const String& s) {
+void A_Arduino::serialPrintLn(const char* s) {
     Serial.println(s);
 }
+
+void A_Arduino::serialPrint(const __FlashStringHelper* s) {
+    Serial.print(s);
+}
+
+void A_Arduino::serialPrintLn(const __FlashStringHelper* s) {
+    Serial.println(s);
+}
+
+// void A_Arduino::serialPrint(const String& s) {
+//     Serial.print(s);
+// }
+
+// void A_Arduino::serialPrintLn(const String& s) {
+//     Serial.println(s);
+// }
 
 /* ============================
    C_Arduino (Component)
