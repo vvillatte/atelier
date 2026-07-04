@@ -5,8 +5,6 @@
    ============================ */
 
 A_Arduino::A_Arduino() {
-    Serial.begin(115200);
-    Serial.println("Serial interface initialized at 115200 baud");
 }
 
 /* ---- Pin Ownership ---- */

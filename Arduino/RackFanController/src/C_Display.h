@@ -1,21 +1,24 @@
 #ifndef _C_DISPLAY_H
 #define _C_DISPLAY_H
 
-#include "C_Arduino.h"
-#include "C_LCD1602I2C.h"
-#include "C_OLED12864_SSD1306.h"
-#include "ErrorCodes.h"
-
 // Select which display to use
-#define USE_OLED_DISPLAY   1   // 1 = OLED12864_SSD1306, 0 = LCD1602I2C
+#define USE_OLED_DISPLAY   0   // 1 = OLED12864SSD1306, 0 = LCD1602I2C
+
+#include "C_Arduino.h"
+#if USE_OLED_DISPLAY
+#include "C_OLED12864SSD1306.h"
+#else
+#include "C_LCD1602I2C.h"
+#endif
+#include "ErrorCodes.h"
 
 /* ============================
    DisplayType enum
    ============================ */
 
 enum DisplayType {
-    DISPLAY_LCD1602,
-    DISPLAY_OLED12864
+    DISPLAY_LCD1602I2C,
+    DISPLAY_OLED12864SSD1306
 };
 
 /* ============================
@@ -35,25 +38,63 @@ public:
 };
 
 
+#if USE_OLED_DISPLAY
+/* ============================
+   A_OLED12864SSD1306 (Adapter)
+   ============================ */
+class A_Display_OLED12864SSD1306 : public I_Display {
+public:
+    A_Display_OLED12864SSD1306(I_OLED12864SSD1306* oled) : p_ItsIOLED12864SSD1306(oled) {}
+
+    void init() override {
+        p_ItsIOLED12864SSD1306->init();
+        p_ItsIOLED12864SSD1306->clear();
+        p_ItsIOLED12864SSD1306->display();
+    }
+
+    void clear() override {
+        p_ItsIOLED12864SSD1306->clear();
+    }
+
+    void printAt(uint8_t x, uint8_t y, const String& text) override {
+        p_ItsIOLED12864SSD1306->printAt(x, y, text);
+    }
+
+    void refresh() override {
+        p_ItsIOLED12864SSD1306->display();
+    }
+
+    void setTextSize(uint8_t size) override {
+        p_ItsIOLED12864SSD1306->setTextSize(size);
+    }
+
+    DisplayType getDisplayType() const override {
+        return DISPLAY_OLED12864SSD1306;
+    }
+
+private:
+    I_OLED12864SSD1306* p_ItsIOLED12864SSD1306;
+};
+#else
 /* ============================
    A_Display_LCD1602 (Adapter)
    ============================ */
 
-class A_Display_LCD1602 : public I_Display {
+class A_Display_LCD1602I2C : public I_Display {
 public:
-    A_Display_LCD1602(I_LCD1602* lcd) : lcd(lcd) {}
+    A_Display_LCD1602I2C(I_LCD1602I2C* pILCD1602I2C) : p_ItsILCD1602I2C(pILCD1602I2C) {}
 
     void init() override {
-        lcd->init();
-        lcd->clear();
+        p_ItsILCD1602I2C->init();
+        p_ItsILCD1602I2C->clear();
     }
 
     void clear() override {
-        lcd->clear();
+        p_ItsILCD1602I2C->clear();
     }
 
     void printAt(uint8_t x, uint8_t y, const String& text) override {
-        lcd->printAt(x, y, text);
+        p_ItsILCD1602I2C->printAt(x, y, text);
     }
 
     void refresh() override {
@@ -65,51 +106,13 @@ public:
     }
 
     DisplayType getDisplayType() const override {
-        return DISPLAY_LCD1602;
+        return DISPLAY_LCD1602I2C;
     }
 
 private:
-    I_LCD1602* lcd;
+    I_LCD1602I2C* p_ItsILCD1602I2C;
 };
-
-
-/* ============================
-   A_Display_OLED12864 (Adapter)
-   ============================ */
-
-class A_Display_OLED12864 : public I_Display {
-public:
-    A_Display_OLED12864(I_OLED12864_SSD1306* oled) : oled(oled) {}
-
-    void init() override {
-        oled->init();
-        oled->clear();
-        oled->display();
-    }
-
-    void clear() override {
-        oled->clear();
-    }
-
-    void printAt(uint8_t x, uint8_t y, const String& text) override {
-        oled->printAt(x, y, text);
-    }
-
-    void refresh() override {
-        oled->display();
-    }
-
-    void setTextSize(uint8_t size) override {
-        oled->setTextSize(size);
-    }
-
-    DisplayType getDisplayType() const override {
-        return DISPLAY_OLED12864;
-    }
-
-private:
-    I_OLED12864_SSD1306* oled;
-};
+#endif
 
 
 /* ============================
@@ -120,21 +123,21 @@ class C_Display {
 public:
     C_Display();
 
-    int set_ItsIArduino(I_Arduino* p);
+    int set_ItsIArduino(I_Arduino* pIArduino);
     int begin();
 
     I_Display* get_ItsIDisplay();
     C_Display* get_ItsCDisplay();
 
 private:
-    I_Arduino* its_pArduino = nullptr;
+    I_Arduino* p_ItsIArduino = nullptr;
 
 #if USE_OLED_DISPLAY
-    C_OLED12864_SSD1306 its_oled;
-    A_Display_OLED12864* adapter = nullptr;
+    C_OLED12864SSD1306 itsCOLED12864SSD1306;
+    A_Display_OLED12864SSD1306 itsAdapter;
 #else
-    C_LCD1602I2C its_lcd;
-    A_Display_LCD1602* adapter = nullptr;
+    C_LCD1602I2C itsCLCD1602I2C;
+    A_Display_LCD1602I2C itsAdapter;
 #endif
 };
 

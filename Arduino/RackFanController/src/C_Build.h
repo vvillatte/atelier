@@ -6,20 +6,36 @@
 #include "C_Display.h"
 #include "C_Processor.h"
 
+enum BuildState {
+    BUILD_STATE_CONSTRUCT,
+    BUILD_STATE_INITIALISE,
+    BUILD_STATE_EXECUTE
+};
+
 class C_Build {
 public:
     C_Build();
-    void begin();
 
-    C_Processor* get_ItsCProcessor();
-    I_Processor* get_ItsIProcessor();
+    // State machine driver
+    void run();
+
+    // Optional explicit calls
+    void initialise();
+    void execute();
 
 private:
-    C_Arduino  its_Arduino;
-    C_DHT22    its_dhtInternal;
-    C_DHT22    its_dhtExternal;
-    C_Display  its_display;
-    C_Processor its_processor;
+
+    // State handlers
+    void doConstruct();
+    void doInitialise();
+    void doExecute();
+
+    BuildState state;
+    C_Arduino  its_CArduino;
+    C_DHT22    its_CDHT1;
+    C_DHT22    its_CDHT2;
+    C_Display  its_CDisplay;
+    C_Processor its_CProcessor;
 };
 
 #endif

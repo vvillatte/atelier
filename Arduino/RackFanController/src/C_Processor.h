@@ -23,18 +23,18 @@ public:
 
 class A_Processor : public I_Processor {
 public:
-    A_Processor(I_DHT22* its_pInternal,
-                I_DHT22* its_pExternal,
-                I_Display* its_pDisplay,
-                I_Arduino* its_pArduino);
+    A_Processor(I_DHT22* p_ItsIDHT22_1,
+                I_DHT22* p_ItsIDHT22_2,
+                I_Display* p_ItsIDisplay,
+                I_Arduino* p_ItsIArduino);
 
     void loop() override;
 
 private:
-    I_DHT22*   its_pInternal;
-    I_DHT22*   its_pExternal;
-    I_Display* its_pDisplay;
-    I_Arduino* its_pArduino;
+    I_DHT22*   p_ItsIDHT22_1;
+    I_DHT22*   p_ItsIDHT22_2;
+    I_Display* p_ItsIDisplay;
+    I_Arduino* p_ItsIArduino;
 
     unsigned long lastSample = 0;
 };
@@ -48,10 +48,10 @@ class C_Processor {
 public:
     C_Processor();
 
-    int set_ItsIInternalDHT22(I_DHT22* p);
-    int set_ItsIExternalDHT22(I_DHT22* p);
-    int set_ItsIDisplay(I_Display* p);
-    int set_ItsIArduino(I_Arduino* p);
+    int set_ItsIInternalDHT22(I_DHT22* pIDHT22);
+    int set_ItsIExternalDHT22(I_DHT22* pIDHT22);
+    int set_ItsIDisplay(I_Display* pIDisplay);
+    int set_ItsIArduino(I_Arduino* pIArduino);
 
     int begin();
 
@@ -59,12 +59,12 @@ public:
     C_Processor* get_ItsCProcessor();
 
 private:
-    I_DHT22*   its_pInternal = nullptr;
-    I_DHT22*   its_pExternal = nullptr;
-    I_Display* its_pDisplay  = nullptr;
-    I_Arduino* its_pArduino  = nullptr;
+    I_DHT22*   p_ItsIDHT22_1 = nullptr;
+    I_DHT22*   p_ItsIDHT22_2 = nullptr;
+    I_Display* p_ItsIDisplay  = nullptr;
+    I_Arduino* p_ItsIArduino  = nullptr;
 
-    A_Processor* adapter = nullptr;
+    A_Processor itsAdapter;
 };
 
 #endif

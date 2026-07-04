@@ -24,7 +24,7 @@ public:
 
 class A_DHT22 : public I_DHT22 {
 public:
-    A_DHT22(uint8_t pin, I_Arduino* its_pArduino);
+    A_DHT22(uint8_t pin, I_Arduino* p_IArduino);
 
     void begin() override;
     float readTemperature() override;
@@ -33,7 +33,7 @@ public:
 private:
     DHT dht;
     uint8_t pin;
-    I_Arduino* its_pArduino;
+    I_Arduino* p_ItsIArduino;
 };
 
 
@@ -54,8 +54,9 @@ public:
 private:
     uint8_t pin;
 
-    I_Arduino* its_pArduino = nullptr;
-    A_DHT22* adapter = nullptr;
+    I_Arduino* p_ItsIArduino = nullptr;
+    A_DHT22 itsADHT22;
+    bool adapterReady = false;
 };
 
 #endif

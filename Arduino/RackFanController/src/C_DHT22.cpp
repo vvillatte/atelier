@@ -4,13 +4,14 @@
    A_DHT22 (Adapter)
    ============================ */
 
-A_DHT22::A_DHT22(uint8_t pin, I_Arduino* its_pArduino)
+A_DHT22::A_DHT22(uint8_t pin, I_Arduino* p_IArduino)
     : dht(pin, DHT22),
       pin(pin),
-      its_pArduino(its_pArduino) {}
+      p_ItsIArduino(p_IArduino)
+{}
 
 void A_DHT22::begin() {
-    its_pArduino->pinMode(pin, INPUT);
+    p_ItsIArduino->pinMode(pin, INPUT);
     dht.begin();
 }
 
@@ -29,36 +30,42 @@ float A_DHT22::readHumidity() {
 
 C_DHT22::C_DHT22(uint8_t pin)
     : pin(pin),
-      its_pArduino(nullptr),
-      adapter(nullptr) {}
+      p_ItsIArduino(nullptr),
+      itsADHT22(pin, nullptr),   // temporary, will be replaced
+      adapterReady(false)
+{}
 
-int C_DHT22::set_ItsIArduino(I_Arduino* p) {
-    if (!p) return ERR_NULL_POINTER;
 
-    its_pArduino = p;
+int C_DHT22::set_ItsIArduino(I_Arduino* p_IArduino) {
+    if (!p_IArduino) return ERR_NULL_POINTER;
+
+    p_ItsIArduino = p_IArduino;
 
     // Pin ownership handled by the Arduino adapter
-    int rc = its_pArduino->requestPin(pin);
+    int rc = p_ItsIArduino->requestPin(pin);
     if (rc != ERR_OK) return rc;
 
-    adapter = new A_DHT22(pin, its_pArduino);
+    // Construct adapter safely (no heap)
+    itsADHT22 = A_DHT22(pin, p_ItsIArduino);
+    adapterReady = true;
+
     return ERR_OK;
 }
 
 int C_DHT22::begin() {
-    if (!adapter) return ERR_INVALID_STATE;
+    if (!adapterReady) return ERR_INVALID_STATE;
 
-    adapter->begin();
+    itsADHT22.begin();
 
     // Minimal sanity check
-    float t = adapter->readTemperature();
+    float t = itsADHT22.readTemperature();
     if (isnan(t)) return ERR_SENSOR_INIT_FAILED;
 
     return ERR_OK;
 }
 
 I_DHT22* C_DHT22::get_ItsIDHT22() {
-    return adapter;
+    return &itsADHT22;
 }
 
 C_DHT22* C_DHT22::get_ItsCDHT22() {

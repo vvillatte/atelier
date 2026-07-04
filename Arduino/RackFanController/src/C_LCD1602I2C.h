@@ -9,9 +9,9 @@
    I_LCD1602 (Interface)
    ============================ */
 
-class I_LCD1602 {
+class I_LCD1602I2C {
 public:
-    virtual ~I_LCD1602() = default;
+    virtual ~I_LCD1602I2C() = default;
     virtual void init() = 0;
     virtual void clear() = 0;
     virtual void printAt(uint8_t col, uint8_t row, const String& text) = 0;
@@ -22,12 +22,12 @@ public:
    A_LCD1602 (Adapter)
    ============================ */
 
-class A_LCD1602 : public I_LCD1602 {
+class A_LCD1602I2C : public I_LCD1602I2C {
 public:
-    A_LCD1602(uint8_t address,
-              uint8_t cols,
-              uint8_t rows,
-              I_Arduino* its_pArduino);
+    A_LCD1602I2C(uint8_t address,
+                 uint8_t cols,
+                 uint8_t rows,
+                 I_Arduino* its_pArduino);
 
     void init() override;
     void clear() override;
@@ -52,7 +52,7 @@ public:
     int set_ItsIArduino(I_Arduino* p);
     int begin();
 
-    I_LCD1602* get_ItsILCD1602();
+    I_LCD1602I2C* get_ItsILCD1602();
     C_LCD1602I2C* get_ItsCLCD1602();
 
 private:
@@ -60,8 +60,8 @@ private:
     uint8_t cols;
     uint8_t rows;
 
-    I_Arduino* its_pArduino = nullptr;
-    A_LCD1602* adapter = nullptr;
+    I_Arduino* p_ItsIArduino = nullptr;
+    A_LCD1602I2C its_ALCD1602I2C;
 };
 
 #endif

@@ -1,15 +1,14 @@
 #include <Arduino.h>
 #include "C_Build.h"
 
-C_Build build;
-I_Processor* processor;
+C_Build* itsBuild = nullptr;
 
 void setup() {
-    Serial.begin(9600);
-    build.begin();
-    processor = build.get_ItsIProcessor();
+    Serial.begin(115200);
+    Serial.println("[SETUP] Starting Rack Fan Controller...");
+    itsBuild = new C_Build();
 }
 
 void loop() {
-    processor->loop();
+    itsBuild->run();
 }
