@@ -39,8 +39,14 @@ public:
     virtual void digitalWrite(uint8_t pin, uint8_t value) = 0;
     virtual unsigned long millis() = 0;
 
-    virtual void serialPrint(const String& s) = 0;
-    virtual void serialPrintLn(const String& s) = 0;
+    virtual void serialPrint(const char* s) = 0;
+    virtual void serialPrintLn(const char* s) = 0;
+
+    virtual void serialPrint(const __FlashStringHelper* s) = 0;
+    virtual void serialPrintLn(const __FlashStringHelper* s) = 0;
+
+    // virtual void serialPrint(const String& s) = 0;
+    // virtual void serialPrintLn(const String& s) = 0;
 };
 
 
@@ -61,8 +67,14 @@ public:
     void digitalWrite(uint8_t pin, uint8_t value) override;
     unsigned long millis() override;
     
-    void serialPrint(const String& s) override;
-    void serialPrintLn(const String& s) override;
+    void serialPrint(const char* s) override;
+    void serialPrintLn(const char* s) override;
+
+    void serialPrint(const __FlashStringHelper* s) override;
+    void serialPrintLn(const __FlashStringHelper* s) override;
+
+    // void serialPrint(const String& s) override;
+    // void serialPrintLn(const String& s) override;
 
 private:
     // Pin ownership bitmask (supports up to 64 pins)
@@ -85,11 +97,11 @@ class C_Arduino {
 public:
     C_Arduino();
 
-    I_Arduino* get_ItsIArduino();
-    C_Arduino* get_ItsCArduino();
+    I_Arduino* getInterface();
+    C_Arduino* getComponent();
 
 private:
-    A_Arduino adapter;
+    A_Arduino itsAdapter;
 };
 
 #endif

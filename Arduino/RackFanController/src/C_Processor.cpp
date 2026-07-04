@@ -1,84 +1,140 @@
 #include "C_Processor.h"
 
 /* ============================
+   Optimal statis formatting
+   for temperature and humidity
+   ============================ */
+
+static void formatTemp(char* buf, int v) {
+    int iv = v / 10;
+    int dv = v % 10;
+
+    buf[0] = '0' + (iv / 10);
+    buf[1] = '0' + (iv % 10);
+    buf[2] = '.';
+    buf[3] = '0' + dv;
+    buf[4] = '\0';
+}
+
+static void formatHum(char* buf, int v) {
+    int iv = v / 10;
+    int dv = v % 10;
+
+    buf[0] = '0' + (iv / 10);
+    buf[1] = '0' + (iv % 10);
+    buf[2] = '.';
+    buf[3] = '0' + dv;
+    buf[4] = '%';
+    buf[5] = '\0';
+}
+
+
+/* ============================
    A_Processor (Adapter)
    ============================ */
 
-A_Processor::A_Processor(I_DHT22* its_pInternal,
-                         I_DHT22* its_pExternal,
-                         I_LCD1602* its_pLCD,
-                         I_Arduino* its_pArduino)
-    : its_pInternal(its_pInternal),
-      its_pExternal(its_pExternal),
-      its_pLCD(its_pLCD),
-      its_pArduino(its_pArduino),
-      lastSample(0) {}
+A_Processor::A_Processor(I_DHT22* pI_DHT22_1,
+                         I_DHT22* pI_DHT22_2,
+                         I_Display* pI_Display,
+                         I_Arduino* pI_Arduino)
+    : pItsDHT22_1Interface(pI_DHT22_1),
+      pItsDHT22_2Interface(pI_DHT22_2),
+      pItsDisplayInterface(pI_Display),
+      pItsArduinoInterface(pI_Arduino),
+      lastSample(0)
+{}
 
 void A_Processor::loop() {
-    if (!its_pInternal || !its_pExternal || !its_pLCD || !its_pArduino) {
-        its_pLCD->clear();
-        its_pLCD->printAt(0, 0, "ERR: Ports");
-        its_pLCD->printAt(0, 1, "not wired");
+
+    if (!pItsDHT22_1Interface || !pItsDHT22_2Interface ||
+        !pItsDisplayInterface || !pItsArduinoInterface)
+    {
+        pItsDisplayInterface->clear();
+        pItsDisplayInterface->printAt(0, 0, DISP_ERR_PORTS);
+        pItsDisplayInterface->printAt(0, 10, DISP_ERR_NOT_WIRED);
+        pItsDisplayInterface->refresh();
         return;
     }
 
-    unsigned long now = its_pArduino->millis();   // Correct source of millis()
+    unsigned long now = pItsArduinoInterface->millis();
     if (now - lastSample < 10000) return;
-
     lastSample = now;
 
-    float t1 = its_pInternal->readTemperature();
-    float h1 = its_pInternal->readHumidity();
-    float t2 = its_pExternal->readTemperature();
-    float h2 = its_pExternal->readHumidity();
+    int t1 = pItsDHT22_1Interface->readTemperature();
+    int h1 = pItsDHT22_1Interface->readHumidity();
+    int t2 = pItsDHT22_2Interface->readTemperature();
+    int h2 = pItsDHT22_2Interface->readHumidity();
 
     if (isnan(t1) || isnan(h1) || isnan(t2) || isnan(h2)) {
-        its_pLCD->clear();
-        its_pLCD->printAt(0, 0, "ERR: Sensor");
-        its_pLCD->printAt(0, 1, "read fail");
+        pItsDisplayInterface->clear();
+        pItsDisplayInterface->printAt(0, 0, DISP_ERR_SENSOR);
+        pItsDisplayInterface->printAt(0, 10, DISP_ERR_READ_FAIL);
+        pItsDisplayInterface->refresh();
         return;
     }
 
-    // --- Format humidity safely ---
-    auto fmtHum = [](float h) {
-    String s = String(h, 1);   // e.g. "83.8", "76.5", "100.0"
+    // --- Format buffers ---
+    char t1buf[8], t2buf[8], h1buf[8], h2buf[8];
 
-    // Trim "100.0" → "100"
-    if (s == "100.0") s = "100";
+    formatTemp(t1buf, t1);
+    formatTemp(t2buf, t2);
+    formatHum(h1buf, h1);
+    formatHum(h2buf, h2);
 
-    // Append %
-    s += "%";
+    if (strcmp(h1buf, "100.0") == 0) strcpy(h1buf, "100");
+    if (strcmp(h2buf, "100.0") == 0) strcpy(h2buf, "100");
 
-    // Add one extra space if shorter than "100%"
-    // "83.8%" → length 5 → no extra space
-    // "100%"  → length 4 → add space → "100% "
-    if (s.length() < 5) {
-        s += " ";
-    }
+    pItsDisplayInterface->clear();
 
-    return s;
-    };
+    // ============================================================
+    // OLED‑only build
+    // ============================================================
+#ifdef USE_OLED_DISPLAY
 
+    // Clear screen
+    pItsDisplayInterface->clear();
 
-    // --- Format temperature safely ---
-    auto fmtTemp = [](float t) {
-        return String(t, 1) + "C";   // degree symbol unsupported on UNO R4
-    };
+    pItsDisplayInterface->setTextSize(OLED_TEXT_SIZE_MEDIUM);
+    pItsDisplayInterface->printAt(22, 0,  DISP_HEADER);   // Centred
 
-    its_pLCD->clear();
-    its_pLCD->printAt(0, 0, "T: " + fmtTemp(t1) + " / " + fmtTemp(t2));
-    its_pLCD->printAt(0, 1, "H: " + fmtHum(h1) + " / " + fmtHum(h2));
+    // --- Temperature (bright) ---
+    pItsDisplayInterface->printAt(0, 20, t1buf);
+    pItsDisplayInterface->printAt(68, 20, h1buf);
 
-    // --- USB telemetry output ---
-    its_pArduino->serialPrint("T1:");
-    its_pArduino->serialPrint(String(t1, 1));
-    its_pArduino->serialPrint(",H1:");
-    its_pArduino->serialPrint(String(h1, 1));
-    its_pArduino->serialPrint(",T2:");
-    its_pArduino->serialPrint(String(t2, 1));
-    its_pArduino->serialPrint(",H2:");
-    its_pArduino->serialPrintLn(String(h2, 1));
+    // --- Humidity (dim) ---
+    pItsDisplayInterface->printAt(0, 36, t2buf);
+    pItsDisplayInterface->printAt(68, 36, h2buf);
+#else
+
+    // ============================================================
+    // LCD‑only build
+    // ============================================================
+
+    char line1[20];
+    char line2[20];
+
+    snprintf(line1, sizeof(line1), "T:%s / %s", t1buf, t2buf);
+    snprintf(line2, sizeof(line2), "H:%s / %s", h1buf, h2buf);
+
+    pItsDisplayInterface->printAt(0, 0, line1);
+    pItsDisplayInterface->printAt(0, 1, line2);
+
+#endif
+
+    pItsDisplayInterface->refresh();
+
+    // --- Serial output ---
+    pItsArduinoInterface->serialPrint(SER_T1);
+    pItsArduinoInterface->serialPrint(t1buf);
+    pItsArduinoInterface->serialPrint(SER_H1);
+    pItsArduinoInterface->serialPrint(h1buf);
+    pItsArduinoInterface->serialPrint(SER_T2);
+    pItsArduinoInterface->serialPrint(t2buf);
+    pItsArduinoInterface->serialPrint(SER_H2);
+    pItsArduinoInterface->serialPrintLn(h2buf);
 }
+
+
 
 
 /* ============================
@@ -86,49 +142,50 @@ void A_Processor::loop() {
    ============================ */
 
 C_Processor::C_Processor()
-    : its_pInternal(nullptr),
-      its_pExternal(nullptr),
-      its_pLCD(nullptr),
-      its_pArduino(nullptr),
-      adapter(nullptr) {}
+    : pItsDHT22_1Interface(nullptr),
+      pItsDHT22_2Interface(nullptr),
+      pItsDisplayInterface(nullptr),
+      pItsArduinoInterface(nullptr),
+      itsAdapter(nullptr, nullptr, nullptr, nullptr)
+{}
 
-int C_Processor::set_ItsIInternalDHT22(I_DHT22* p) {
-    if (!p) return ERR_NULL_POINTER;
-    its_pInternal = p;
+int C_Processor::setItsDHT22_1Interface(I_DHT22* pI_DHT22) {
+    if (!pI_DHT22) return ERR_NULL_POINTER;
+    pItsDHT22_1Interface = pI_DHT22;
     return ERR_OK;
 }
 
-int C_Processor::set_ItsIExternalDHT22(I_DHT22* p) {
-    if (!p) return ERR_NULL_POINTER;
-    its_pExternal = p;
+int C_Processor::setItsDHT22_2Interface(I_DHT22* pI_DHT22) {
+    if (!pI_DHT22) return ERR_NULL_POINTER;
+    pItsDHT22_2Interface = pI_DHT22;
     return ERR_OK;
 }
 
-int C_Processor::set_ItsILCD(I_LCD1602* p) {
-    if (!p) return ERR_NULL_POINTER;
-    its_pLCD = p;
+int C_Processor::setItsDisplayInterface(I_Display* pI_Display) {
+    if (!pI_Display) return ERR_NULL_POINTER;
+    pItsDisplayInterface = pI_Display;
     return ERR_OK;
 }
 
-int C_Processor::set_ItsIArduino(I_Arduino* p) {
-    if (!p) return ERR_NULL_POINTER;
-    its_pArduino = p;
+int C_Processor::setItsArduinoInterface(I_Arduino* pI_Arduino) {
+    if (!pI_Arduino) return ERR_NULL_POINTER;
+    pItsArduinoInterface = pI_Arduino;
     return ERR_OK;
 }
 
 int C_Processor::begin() {
-    if (!its_pInternal || !its_pExternal || !its_pLCD || !its_pArduino)
+    if (!pItsDHT22_1Interface || !pItsDHT22_2Interface || !pItsDisplayInterface || !pItsArduinoInterface)
         return ERR_INVALID_STATE;
 
-    adapter = new A_Processor(its_pInternal,
-                              its_pExternal,
-                              its_pLCD,
-                              its_pArduino);
+    itsAdapter = A_Processor(pItsDHT22_1Interface,
+                              pItsDHT22_2Interface,
+                              pItsDisplayInterface,
+                              pItsArduinoInterface);
     return ERR_OK;
 }
 
 I_Processor* C_Processor::get_ItsIProcessor() {
-    return adapter;
+    return &itsAdapter;
 }
 
 C_Processor* C_Processor::get_ItsCProcessor() {

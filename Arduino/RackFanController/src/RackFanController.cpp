@@ -1,15 +1,17 @@
 #include <Arduino.h>
 #include "C_Build.h"
 
-C_Build build;
-I_Processor* processor;
+#define MSG_SETUP_START F("[SETUP] Starting Rack Fan Controller...")
+constexpr unsigned long BAUD_RATE = 115200;
+
+C_Build* itsBuild = nullptr;
 
 void setup() {
-    Serial.begin(9600);
-    build.begin();
-    processor = build.get_ItsIProcessor();
+    Serial.begin(BAUD_RATE);
+    Serial.println(MSG_SETUP_START);
+    itsBuild = new C_Build();
 }
 
 void loop() {
-    processor->loop();
+    itsBuild->run();
 }

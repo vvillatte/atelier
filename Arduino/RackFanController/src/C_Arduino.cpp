@@ -5,8 +5,6 @@
    ============================ */
 
 A_Arduino::A_Arduino() {
-    Serial.begin(115200);
-    Serial.println("Serial interface initialized at 115200 baud");
 }
 
 /* ---- Pin Ownership ---- */
@@ -89,25 +87,41 @@ unsigned long A_Arduino::millis() {
 
 /* ---- Serial passthrough ---- */
 
-void A_Arduino::serialPrint(const String& s) {
+void A_Arduino::serialPrint(const char* s) {
     Serial.print(s);
 }
 
-void A_Arduino::serialPrintLn(const String& s) {
+void A_Arduino::serialPrintLn(const char* s) {
     Serial.println(s);
 }
+
+void A_Arduino::serialPrint(const __FlashStringHelper* s) {
+    Serial.print(s);
+}
+
+void A_Arduino::serialPrintLn(const __FlashStringHelper* s) {
+    Serial.println(s);
+}
+
+// void A_Arduino::serialPrint(const String& s) {
+//     Serial.print(s);
+// }
+
+// void A_Arduino::serialPrintLn(const String& s) {
+//     Serial.println(s);
+// }
 
 /* ============================
    C_Arduino (Component)
    ============================ */
 
 C_Arduino::C_Arduino()
-    : adapter() {}
+    : itsAdapter() {}
 
-I_Arduino* C_Arduino::get_ItsIArduino() {
-    return &adapter;
+I_Arduino* C_Arduino::getInterface() {
+    return &itsAdapter;
 }
 
-C_Arduino* C_Arduino::get_ItsCArduino() {
+C_Arduino* C_Arduino::getComponent() {
     return this;
 }

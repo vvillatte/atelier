@@ -13,8 +13,8 @@ class I_DHT22 {
 public:
     virtual ~I_DHT22() = default;
     virtual void begin() = 0;
-    virtual float readTemperature() = 0;
-    virtual float readHumidity() = 0;
+    virtual int readTemperature() = 0;
+    virtual int readHumidity() = 0;
 };
 
 
@@ -24,16 +24,16 @@ public:
 
 class A_DHT22 : public I_DHT22 {
 public:
-    A_DHT22(uint8_t pin, I_Arduino* its_pArduino);
+    A_DHT22(uint8_t pin, I_Arduino* p_IArduino);
 
     void begin() override;
-    float readTemperature() override;
-    float readHumidity() override;
+    int readTemperature() override;
+    int readHumidity() override;
 
 private:
     DHT dht;
     uint8_t pin;
-    I_Arduino* its_pArduino;
+    I_Arduino* pItsArduinoInterface = nullptr;
 };
 
 
@@ -45,17 +45,18 @@ class C_DHT22 {
 public:
     C_DHT22(uint8_t pin);
 
-    int set_ItsIArduino(I_Arduino* p);
+    int setItsArduinoInterface(I_Arduino* p);
     int begin();
 
-    I_DHT22* get_ItsIDHT22();
-    C_DHT22* get_ItsCDHT22();
+    I_DHT22* getInterface();
+    C_DHT22* getComponent();
 
 private:
     uint8_t pin;
 
-    I_Arduino* its_pArduino = nullptr;
-    A_DHT22* adapter = nullptr;
+    I_Arduino* pItsArduinoInterface = nullptr;
+    A_DHT22 itsAdapter;
+    bool adapterReady = false;
 };
 
 #endif
