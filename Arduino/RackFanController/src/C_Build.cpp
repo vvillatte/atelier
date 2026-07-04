@@ -3,13 +3,13 @@
 
 C_Build::C_Build()
     : state(BUILD_STATE_CONSTRUCT),
-      its_CArduino(),
-      its_CDHT1(2),
-      its_CDHT2(4),
-      its_CDisplay(),
-      its_CProcessor()
+      itsC_Arduino(),
+      itsC_DHT1(2),
+      itsC_DHT2(4),
+      itsC_Display(),
+      itsC_Processor()
 {
-    Serial.println("[BUILD] Build object created, entering CONSTRUCT state...");
+    Serial.println("[BUILD] Build object created.");
 }
 
 /* ============================================================
@@ -52,14 +52,6 @@ void C_Build::execute() {
    ============================================================ */
 
 void C_Build::doConstruct() {
-    Serial.println("[BUILD] Constructing components...");
-
-    Serial.println("[BUILD] Arduino constructed");
-    Serial.println("[BUILD] DHT1 constructed on pin 2");
-    Serial.println("[BUILD] DHT2 constructed on pin 4");
-    Serial.println("[BUILD] Display constructed");
-    Serial.println("[BUILD] Processor constructed");
-
     Serial.println("[BUILD] Construction complete.");
     state = BUILD_STATE_INITIALISE;
 }
@@ -71,85 +63,85 @@ void C_Build::doConstruct() {
 void C_Build::doInitialise() {
     Serial.println("[INIT] Starting initialisation...");
 
-    I_Arduino* p_ItsIArduino = its_CArduino.get_ItsIArduino();
-    if (!p_ItsIArduino) {
+    I_Arduino* pI_Arduino = itsC_Arduino.getInterface();
+    if (!pI_Arduino) {
         Serial.println("[INIT] ERR: Arduino interface null");
         return;
     }
 
     /* --- Wire DHT1 --- */
     Serial.println("[INIT] Wiring DHT1...");
-    if (its_CDHT1.set_ItsIArduino(p_ItsIArduino) != ERR_OK) {
+    if (itsC_DHT1.setItsArduinoInterface(pI_Arduino) != ERR_OK) {
         Serial.println("[INIT] ERR: DHT1 wiring failed");
         return;
     }
 
     /* --- Wire DHT2 --- */
     Serial.println("[INIT] Wiring DHT2...");
-    if (its_CDHT2.set_ItsIArduino(p_ItsIArduino) != ERR_OK) {
+    if (itsC_DHT2.setItsArduinoInterface(pI_Arduino) != ERR_OK) {
         Serial.println("[INIT] ERR: DHT2 wiring failed");
         return;
     }
 
     /* --- Wire Display --- */
     Serial.println("[INIT] Wiring Display...");
-    if (its_CDisplay.set_ItsIArduino(p_ItsIArduino) != ERR_OK) {
+    if (itsC_Display.setItsArduinoInterface(pI_Arduino) != ERR_OK) {
         Serial.println("[INIT] ERR: Display wiring failed");
         return;
     }
 
     Serial.println("[INIT] Initialising Display...");
-    if (its_CDisplay.begin() != ERR_OK) {
+    if (itsC_Display.begin() != ERR_OK) {
         Serial.println("[INIT] ERR: Display init failed");
         return;
     }
 
-    I_Display* p_ItsIDisplay = its_CDisplay.get_ItsIDisplay();
-    p_ItsIDisplay->clear();
-    p_ItsIDisplay->printAt(0, 0, "Init...");
-    p_ItsIDisplay->printAt(0, 10, "Please wait");
-    p_ItsIDisplay->refresh();
+    I_Display* pI_Display = itsC_Display.getInterface();
+    pI_Display->clear();
+    pI_Display->printAt(0, 0, "Init...");
+    pI_Display->printAt(0, 1, "Please wait");
+    pI_Display->refresh();
 
     /* --- Begin DHT1 --- */
     Serial.println("[INIT] Initialising DHT1...");
-    if (its_CDHT1.begin() != ERR_OK) {
+    if (itsC_DHT1.begin() != ERR_OK) {
         Serial.println("[INIT] ERR: DHT1 init failed");
-        p_ItsIDisplay->clear();
-        p_ItsIDisplay->printAt(0, 0, "ERR: DHT1");
-        p_ItsIDisplay->refresh();
+        pI_Display->clear();
+        pI_Display->printAt(0, 0, "ERR: DHT1");
+        pI_Display->refresh();
         return;
     }
 
     /* --- Begin DHT2 --- */
     Serial.println("[INIT] Initialising DHT2...");
-    if (its_CDHT2.begin() != ERR_OK) {
+    if (itsC_DHT2.begin() != ERR_OK) {
         Serial.println("[INIT] ERR: DHT2 init failed");
-        p_ItsIDisplay->clear();
-        p_ItsIDisplay->printAt(0, 0, "ERR: DHT2");
-        p_ItsIDisplay->refresh();
+        pI_Display->clear();
+        pI_Display->printAt(0, 0, "ERR: DHT2");
+        pI_Display->refresh();
         return;
     }
 
     /* --- Wire Processor --- */
     Serial.println("[INIT] Wiring Processor...");
-    its_CProcessor.set_ItsIInternalDHT22(its_CDHT1.get_ItsIDHT22());
-    its_CProcessor.set_ItsIExternalDHT22(its_CDHT2.get_ItsIDHT22());
-    its_CProcessor.set_ItsIArduino(its_CArduino.get_ItsIArduino());
-    its_CProcessor.set_ItsIDisplay(its_CDisplay.get_ItsIDisplay());
+    itsC_Processor.setItsDHT22_1Interface(itsC_DHT1.getInterface());
+    itsC_Processor.setItsDHT22_2Interface(itsC_DHT2.getInterface());
+    itsC_Processor.setItsArduinoInterface(itsC_Arduino.getInterface());
+    itsC_Processor.setItsDisplayInterface(itsC_Display.getInterface());
 
     Serial.println("[INIT] Initialising Processor...");
-    if (its_CProcessor.begin() != ERR_OK) {
+    if (itsC_Processor.begin() != ERR_OK) {
         Serial.println("[INIT] ERR: Processor init failed");
-        p_ItsIDisplay->clear();
-        p_ItsIDisplay->printAt(0, 0, "ERR: Processor");
-        p_ItsIDisplay->refresh();
+        pI_Display->clear();
+        pI_Display->printAt(0, 0, "ERR: Processor");
+        pI_Display->refresh();
         return;
     }
 
     Serial.println("[INIT] All components initialised.");
-    p_ItsIDisplay->clear();
-    p_ItsIDisplay->printAt(0, 0, "System Ready");
-    p_ItsIDisplay->refresh();
+    pI_Display->clear();
+    pI_Display->printAt(0, 0, "System Ready");
+    pI_Display->refresh();
 
     state = BUILD_STATE_EXECUTE;
 }
@@ -159,5 +151,5 @@ void C_Build::doInitialise() {
    ============================================================ */
 
 void C_Build::doExecute() {
-    its_CProcessor.get_ItsIProcessor()->loop();
+    itsC_Processor.get_ItsIProcessor()->loop();
 }

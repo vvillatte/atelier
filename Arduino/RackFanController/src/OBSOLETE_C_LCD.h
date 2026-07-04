@@ -1,30 +1,32 @@
-#ifndef _C_LCD1602I2C_H
-#define _C_LCD1602I2C_H
+#ifndef _C_LCD_H
+#define _C_LCD_H
 
 #include "C_Arduino.h"
 #include "ErrorCodes.h"
 #include <LiquidCrystal_I2C.h>
 
 /* ============================
-   I_LCD1602 (Interface)
+   I_LCD (Interface)
    ============================ */
 
-class I_LCD1602I2C {
+class I_LCD {
 public:
-    virtual ~I_LCD1602I2C() = default;
+    virtual ~I_LCD() = default;
     virtual void init() = 0;
     virtual void clear() = 0;
     virtual void printAt(uint8_t col, uint8_t row, const String& text) = 0;
+    virtual void display() = 0;
+    virtual void setTextSize(uint8_t size) = 0;
 };
 
 
 /* ============================
-   A_LCD1602 (Adapter)
+   A_LCD (Adapter)
    ============================ */
 
-class A_LCD1602I2C : public I_LCD1602I2C {
+class A_LCD : public I_LCD {
 public:
-    A_LCD1602I2C(uint8_t address,
+    A_LCD(uint8_t address,
                  uint8_t cols,
                  uint8_t rows,
                  I_Arduino* its_pArduino);
@@ -32,36 +34,37 @@ public:
     void init() override;
     void clear() override;
     void printAt(uint8_t col, uint8_t row, const String& text) override;
-
+    void display() override;
+    void setTextSize(uint8_t size) override;
 private:
     LiquidCrystal_I2C lcd;
-    I_Arduino* its_pArduino;
+    I_Arduino* pItsI_Arduino;
 };
 
 
 /* ============================
-   C_LCD1602I2C (Component)
+   C_LCD (C_LCD)
    ============================ */
 
-class C_LCD1602I2C {
+class C_LCD {
 public:
-    C_LCD1602I2C(uint8_t address = 0x27,
+    C_LCD(uint8_t address = 0x27,
                  uint8_t cols = 16,
                  uint8_t rows = 2);
 
-    int set_ItsIArduino(I_Arduino* p);
+    int setItsArduinoInterface(I_Arduino* pI_Arduino);
     int begin();
 
-    I_LCD1602I2C* get_ItsILCD1602();
-    C_LCD1602I2C* get_ItsCLCD1602();
+    I_LCD* getInterface();
+    C_LCD* getComponent();
 
 private:
     uint8_t address;
     uint8_t cols;
     uint8_t rows;
 
-    I_Arduino* p_ItsIArduino = nullptr;
-    A_LCD1602I2C its_ALCD1602I2C;
+    I_Arduino* pItsI_Arduino = nullptr;
+    A_LCD itsAdapter;
 };
 
 #endif

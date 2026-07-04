@@ -100,12 +100,12 @@ void A_Arduino::serialPrintLn(const String& s) {
    ============================ */
 
 C_Arduino::C_Arduino()
-    : adapter() {}
+    : itsAdapter() {}
 
-I_Arduino* C_Arduino::get_ItsIArduino() {
-    return &adapter;
+I_Arduino* C_Arduino::getInterface() {
+    return &itsAdapter;
 }
 
-C_Arduino* C_Arduino::get_ItsCArduino() {
+C_Arduino* C_Arduino::getComponent() {
     return this;
 }

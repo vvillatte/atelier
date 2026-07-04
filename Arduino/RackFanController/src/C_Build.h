@@ -31,11 +31,11 @@ private:
     void doExecute();
 
     BuildState state;
-    C_Arduino  its_CArduino;
-    C_DHT22    its_CDHT1;
-    C_DHT22    its_CDHT2;
-    C_Display  its_CDisplay;
-    C_Processor its_CProcessor;
+    C_Arduino  itsC_Arduino;
+    C_DHT22    itsC_DHT1;
+    C_DHT22    itsC_DHT2;
+    C_Display  itsC_Display;
+    C_Processor itsC_Processor;
 };
 
 #endif

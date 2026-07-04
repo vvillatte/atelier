@@ -85,11 +85,11 @@ class C_Arduino {
 public:
     C_Arduino();
 
-    I_Arduino* get_ItsIArduino();
-    C_Arduino* get_ItsCArduino();
+    I_Arduino* getInterface();
+    C_Arduino* getComponent();
 
 private:
-    A_Arduino adapter;
+    A_Arduino itsAdapter;
 };
 
 #endif

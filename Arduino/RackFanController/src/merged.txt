@@ -86,11 +86,11 @@ class C_Arduino {
 public:
     C_Arduino();
 
-    I_Arduino* get_ItsIArduino();
-    C_Arduino* get_ItsCArduino();
+    I_Arduino* getInterface();
+    C_Arduino* getComponent();
 
 private:
-    A_Arduino adapter;
+    A_Arduino itsAdapter;
 };
 
 #endif
@@ -128,11 +128,11 @@ private:
     void doExecute();
 
     BuildState state;
-    C_Arduino  its_CArduino;
-    C_DHT22    its_CDHT1;
-    C_DHT22    its_CDHT2;
-    C_Display  its_CDisplay;
-    C_Processor its_CProcessor;
+    C_Arduino  itsC_Arduino;
+    C_DHT22    itsC_DHT1;
+    C_DHT22    itsC_DHT2;
+    C_Display  itsC_Display;
+    C_Processor itsC_Processor;
 };
 
 #endif
@@ -172,7 +172,7 @@ public:
 private:
     DHT dht;
     uint8_t pin;
-    I_Arduino* p_ItsIArduino;
+    I_Arduino* pItsArduinoInterface = nullptr;
 };
 
 
@@ -184,17 +184,17 @@ class C_DHT22 {
 public:
     C_DHT22(uint8_t pin);
 
-    int set_ItsIArduino(I_Arduino* p);
+    int setItsArduinoInterface(I_Arduino* p);
     int begin();
 
-    I_DHT22* get_ItsIDHT22();
-    C_DHT22* get_ItsCDHT22();
+    I_DHT22* getInterface();
+    C_DHT22* getComponent();
 
 private:
     uint8_t pin;
 
-    I_Arduino* p_ItsIArduino = nullptr;
-    A_DHT22 itsADHT22;
+    I_Arduino* pItsArduinoInterface = nullptr;
+    A_DHT22 itsAdapter;
     bool adapterReady = false;
 };
 
@@ -203,21 +203,24 @@ private:
 #ifndef _C_DISPLAY_H
 #define _C_DISPLAY_H
 
-#include "C_Arduino.h"
-#include "C_LCD1602I2C.h"
-#include "C_OLED12864SSD1306.h"
-#include "ErrorCodes.h"
-
 // Select which display to use
-#define USE_OLED_DISPLAY   0   // 1 = OLED12864SSD1306, 0 = LCD1602I2C
+#define USE_OLED_DISPLAY   0   // 1 = OLED, 0 = LCD
+
+#include "C_Arduino.h"
+#if USE_OLED_DISPLAY
+#include "C_OLED.h"
+#else
+#include "C_LCD.h"
+#endif
+#include "ErrorCodes.h"
 
 /* ============================
    DisplayType enum
    ============================ */
 
 enum DisplayType {
-    DISPLAY_LCD1602I2C,
-    DISPLAY_OLED12864SSD1306
+    DISPLAY_LCD,
+    DISPLAY_OLED
 };
 
 /* ============================
@@ -236,83 +239,24 @@ public:
     virtual DisplayType getDisplayType() const = 0;
 };
 
-
 /* ============================
-   A_Display_LCD1602 (Adapter)
+   Adapter (Adapter)
    ============================ */
 
-class A_Display_LCD1602I2C : public I_Display {
+class A_Display : public I_Display {
 public:
-    A_Display_LCD1602I2C(I_LCD1602I2C* pILCD1602I2C) : p_ItsILCD1602I2C(pILCD1602I2C) {}
+        A_Display(I_Display* pDisplay);
 
-    void init() override {
-        p_ItsILCD1602I2C->init();
-        p_ItsILCD1602I2C->clear();
-    }
+        void init() override;
+        void clear() override;
+        void printAt(uint8_t x, uint8_t y, const String& text) override;
+        void refresh() override;
+        void setTextSize(uint8_t size) override;
+        DisplayType getDisplayType() const override;
 
-    void clear() override {
-        p_ItsILCD1602I2C->clear();
-    }
-
-    void printAt(uint8_t x, uint8_t y, const String& text) override {
-        p_ItsILCD1602I2C->printAt(x, y, text);
-    }
-
-    void refresh() override {
-        // LCD1602 does not need a refresh - NOOP
-    }
-
-    void setTextSize(uint8_t size) override {
-        // LCD1602 does not support text scaling — NOOP
-    }
-
-    DisplayType getDisplayType() const override {
-        return DISPLAY_LCD1602I2C;
-    }
-
-private:
-    I_LCD1602I2C* p_ItsILCD1602I2C;
+    private:
+        I_Display* pItsDisplayInterface;
 };
-
-
-/* ============================
-   A_OLED12864SSD1306 (Adapter)
-   ============================ */
-
-class A_Display_OLED12864SSD1306 : public I_Display {
-public:
-    A_Display_OLED12864SSD1306(I_OLED12864SSD1306* oled) : p_ItsIOLED12864SSD1306(oled) {}
-
-    void init() override {
-        p_ItsIOLED12864SSD1306->init();
-        p_ItsIOLED12864SSD1306->clear();
-        p_ItsIOLED12864SSD1306->display();
-    }
-
-    void clear() override {
-        p_ItsIOLED12864SSD1306->clear();
-    }
-
-    void printAt(uint8_t x, uint8_t y, const String& text) override {
-        p_ItsIOLED12864SSD1306->printAt(x, y, text);
-    }
-
-    void refresh() override {
-        p_ItsIOLED12864SSD1306->display();
-    }
-
-    void setTextSize(uint8_t size) override {
-        p_ItsIOLED12864SSD1306->setTextSize(size);
-    }
-
-    DisplayType getDisplayType() const override {
-        return DISPLAY_OLED12864SSD1306;
-    }
-
-private:
-    I_OLED12864SSD1306* p_ItsIOLED12864SSD1306;
-};
-
 
 /* ============================
    C_Display (Component)
@@ -322,53 +266,53 @@ class C_Display {
 public:
     C_Display();
 
-    int set_ItsIArduino(I_Arduino* pIArduino);
+    int setItsArduinoInterface(I_Arduino* pI_Arduino);
     int begin();
 
-    I_Display* get_ItsIDisplay();
-    C_Display* get_ItsCDisplay();
+    I_Display* getInterface();
+    C_Display* getComponent();
 
 private:
-    I_Arduino* p_ItsIArduino = nullptr;
+    I_Arduino* pItsI_Arduino = nullptr;
 
 #if USE_OLED_DISPLAY
-    C_OLED12864SSD1306 itsCOLED12864SSD1306;
-    A_Display_OLED12864SSD1306 itsAdapter;
+    C_OLED itsC_OLED;
 #else
-    C_LCD1602I2C itsCLCD1602I2C;
-    A_Display_LCD1602I2C itsAdapter;
+    C_LCD itsC_LCD;
 #endif
 };
 
 #endif
-===== C_LCD1602I2C.h =====
-#ifndef _C_LCD1602I2C_H
-#define _C_LCD1602I2C_H
+===== C_LCD.h =====
+#ifndef _C_LCD_H
+#define _C_LCD_H
 
 #include "C_Arduino.h"
 #include "ErrorCodes.h"
 #include <LiquidCrystal_I2C.h>
 
 /* ============================
-   I_LCD1602 (Interface)
+   I_LCD (Interface)
    ============================ */
 
-class I_LCD1602I2C {
+class I_LCD {
 public:
-    virtual ~I_LCD1602I2C() = default;
+    virtual ~I_LCD() = default;
     virtual void init() = 0;
     virtual void clear() = 0;
     virtual void printAt(uint8_t col, uint8_t row, const String& text) = 0;
+    virtual void display() = 0;
+    virtual void setTextSize(uint8_t size) = 0;
 };
 
 
 /* ============================
-   A_LCD1602 (Adapter)
+   A_LCD (Adapter)
    ============================ */
 
-class A_LCD1602I2C : public I_LCD1602I2C {
+class A_LCD : public I_LCD {
 public:
-    A_LCD1602I2C(uint8_t address,
+    A_LCD(uint8_t address,
                  uint8_t cols,
                  uint8_t rows,
                  I_Arduino* its_pArduino);
@@ -376,42 +320,43 @@ public:
     void init() override;
     void clear() override;
     void printAt(uint8_t col, uint8_t row, const String& text) override;
-
+    void display() override;
+    void setTextSize(uint8_t size) override;
 private:
     LiquidCrystal_I2C lcd;
-    I_Arduino* its_pArduino;
+    I_Arduino* pItsI_Arduino;
 };
 
 
 /* ============================
-   C_LCD1602I2C (Component)
+   C_LCD (C_LCD)
    ============================ */
 
-class C_LCD1602I2C {
+class C_LCD {
 public:
-    C_LCD1602I2C(uint8_t address = 0x27,
+    C_LCD(uint8_t address = 0x27,
                  uint8_t cols = 16,
                  uint8_t rows = 2);
 
-    int set_ItsIArduino(I_Arduino* p);
+    int setItsArduinoInterface(I_Arduino* pI_Arduino);
     int begin();
 
-    I_LCD1602I2C* get_ItsILCD1602();
-    C_LCD1602I2C* get_ItsCLCD1602();
+    I_LCD* getInterface();
+    C_LCD* getComponent();
 
 private:
     uint8_t address;
     uint8_t cols;
     uint8_t rows;
 
-    I_Arduino* p_ItsIArduino = nullptr;
-    A_LCD1602I2C its_ALCD1602I2C;
+    I_Arduino* pItsI_Arduino = nullptr;
+    A_LCD itsAdapter;
 };
 
 #endif
-===== C_OLED12864SSD1306.h =====
-#ifndef _C_OLED12864SSD1306_H
-#define _C_OLED12864SSD1306_H
+===== C_OLED.h =====
+#ifndef _C_OLED_H
+#define _C_OLED_H
 
 #include "C_Arduino.h"
 #include "ErrorCodes.h"
@@ -420,12 +365,12 @@ private:
 #include <Adafruit_SSD1306.h>
 
 /* ============================
-   I_OLED12864SSD1306 (Interface)
+   I_OLED (Interface)
    ============================ */
 
-class I_OLED12864SSD1306 {
+class I_OLED {
 public:
-    virtual ~I_OLED12864SSD1306() = default;
+    virtual ~I_OLED() = default;
 
     virtual void init() = 0;
     virtual void clear() = 0;
@@ -436,13 +381,13 @@ public:
 
 
 /* ============================
-   A_OLED12864SSD1306 (Adapter)
+   A_OLED (Adapter)
    ============================ */
 
-class A_OLED12864SSD1306 : public I_OLED12864SSD1306 {
+class A_OLED : public I_OLED {
 public:
-    A_OLED12864SSD1306(uint8_t address,
-                        I_Arduino* its_pArduino);
+    A_OLED(uint8_t address,
+                      I_Arduino* its_pArduino);
 
     void init() override;
     void clear() override;
@@ -452,28 +397,28 @@ public:
 
 private:
     Adafruit_SSD1306 oled;
-    I_Arduino* p_ItsIArduino;
+    I_Arduino* pItsArduinoInterface = nullptr;
 };
 
 
 /* ============================
-   C_OLED12864SSD1306 (Component)
+   C_OLED (Component)
    ============================ */
 
-class C_OLED12864SSD1306 {
+class C_OLED {
 public:
-    C_OLED12864SSD1306(uint8_t address = 0x3C);
+    C_OLED(uint8_t address = 0x3C);
 
     int set_ItsIArduino(I_Arduino* pIArduino);
     int begin();
 
-    I_OLED12864SSD1306* get_ItsIOLED12864SSD1306();
-    C_OLED12864SSD1306* get_ItsCOLED12864SSD1306();
+    I_OLED* get_ItsIOLED();
+    C_OLED* get_ItsCOLED();
 
 private:
     uint8_t address;
-    I_Arduino* p_ItsIArduino = nullptr;
-    A_OLED12864SSD1306 its_AOLED12864SSD1306;
+    I_Arduino* pItsArduinoInterface = nullptr;
+    A_OLED itsAdapter;
 };
 
 #endif
@@ -503,18 +448,18 @@ public:
 
 class A_Processor : public I_Processor {
 public:
-    A_Processor(I_DHT22* p_ItsIDHT22_1,
-                I_DHT22* p_ItsIDHT22_2,
-                I_Display* p_ItsIDisplay,
-                I_Arduino* p_ItsIArduino);
+    A_Processor(I_DHT22* pI_DHT22_1,
+                I_DHT22* pI_DHT22_2,
+                I_Display* pI_Display,
+                I_Arduino* pI_Arduino);
 
     void loop() override;
 
 private:
-    I_DHT22*   p_ItsIDHT22_1;
-    I_DHT22*   p_ItsIDHT22_2;
-    I_Display* p_ItsIDisplay;
-    I_Arduino* p_ItsIArduino;
+    I_DHT22*   pItsDHT22_1Interface = nullptr;
+    I_DHT22*   pItsDHT22_2Interface = nullptr;
+    I_Display* pItsDisplayInterface = nullptr;
+    I_Arduino* pItsArduinoInterface = nullptr;
 
     unsigned long lastSample = 0;
 };
@@ -528,10 +473,10 @@ class C_Processor {
 public:
     C_Processor();
 
-    int set_ItsIInternalDHT22(I_DHT22* pIDHT22);
-    int set_ItsIExternalDHT22(I_DHT22* pIDHT22);
-    int set_ItsIDisplay(I_Display* pIDisplay);
-    int set_ItsIArduino(I_Arduino* pIArduino);
+    int setItsDHT22_1Interface(I_DHT22* pIDHT22);
+    int setItsDHT22_2Interface(I_DHT22* pIDHT22);
+    int setItsDisplayInterface(I_Display* pIDisplay);
+    int setItsArduinoInterface(I_Arduino* pIArduino);
 
     int begin();
 
@@ -539,10 +484,10 @@ public:
     C_Processor* get_ItsCProcessor();
 
 private:
-    I_DHT22*   p_ItsIDHT22_1 = nullptr;
-    I_DHT22*   p_ItsIDHT22_2 = nullptr;
-    I_Display* p_ItsIDisplay  = nullptr;
-    I_Arduino* p_ItsIArduino  = nullptr;
+    I_DHT22*   pItsDHT22_1Interface = nullptr;
+    I_DHT22*   pItsDHT22_2Interface = nullptr;
+    I_Display* pItsDisplayInterface  = nullptr;
+    I_Arduino* pItsArduinoInterface  = nullptr;
 
     A_Processor itsAdapter;
 };
@@ -665,13 +610,13 @@ void A_Arduino::serialPrintLn(const String& s) {
    ============================ */
 
 C_Arduino::C_Arduino()
-    : adapter() {}
+    : itsAdapter() {}
 
-I_Arduino* C_Arduino::get_ItsIArduino() {
-    return &adapter;
+I_Arduino* C_Arduino::getInterface() {
+    return &itsAdapter;
 }
 
-C_Arduino* C_Arduino::get_ItsCArduino() {
+C_Arduino* C_Arduino::getComponent() {
     return this;
 }
 ===== C_Build.cpp =====
@@ -680,13 +625,13 @@ C_Arduino* C_Arduino::get_ItsCArduino() {
 
 C_Build::C_Build()
     : state(BUILD_STATE_CONSTRUCT),
-      its_CArduino(),
-      its_CDHT1(2),
-      its_CDHT2(4),
-      its_CDisplay(),
-      its_CProcessor()
+      itsC_Arduino(),
+      itsC_DHT1(2),
+      itsC_DHT2(4),
+      itsC_Display(),
+      itsC_Processor()
 {
-    Serial.println("[BUILD] Build object created, entering CONSTRUCT state...");
+    Serial.println("[BUILD] Build object created.");
 }
 
 /* ============================================================
@@ -729,14 +674,6 @@ void C_Build::execute() {
    ============================================================ */
 
 void C_Build::doConstruct() {
-    Serial.println("[BUILD] Constructing components...");
-
-    Serial.println("[BUILD] Arduino constructed");
-    Serial.println("[BUILD] DHT1 constructed on pin 2");
-    Serial.println("[BUILD] DHT2 constructed on pin 4");
-    Serial.println("[BUILD] Display constructed");
-    Serial.println("[BUILD] Processor constructed");
-
     Serial.println("[BUILD] Construction complete.");
     state = BUILD_STATE_INITIALISE;
 }
@@ -748,85 +685,85 @@ void C_Build::doConstruct() {
 void C_Build::doInitialise() {
     Serial.println("[INIT] Starting initialisation...");
 
-    I_Arduino* p_ItsIArduino = its_CArduino.get_ItsIArduino();
-    if (!p_ItsIArduino) {
+    I_Arduino* pI_Arduino = itsC_Arduino.getInterface();
+    if (!pI_Arduino) {
         Serial.println("[INIT] ERR: Arduino interface null");
         return;
     }
 
     /* --- Wire DHT1 --- */
     Serial.println("[INIT] Wiring DHT1...");
-    if (its_CDHT1.set_ItsIArduino(p_ItsIArduino) != ERR_OK) {
+    if (itsC_DHT1.setItsArduinoInterface(pI_Arduino) != ERR_OK) {
         Serial.println("[INIT] ERR: DHT1 wiring failed");
         return;
     }
 
     /* --- Wire DHT2 --- */
     Serial.println("[INIT] Wiring DHT2...");
-    if (its_CDHT2.set_ItsIArduino(p_ItsIArduino) != ERR_OK) {
+    if (itsC_DHT2.setItsArduinoInterface(pI_Arduino) != ERR_OK) {
         Serial.println("[INIT] ERR: DHT2 wiring failed");
         return;
     }
 
     /* --- Wire Display --- */
     Serial.println("[INIT] Wiring Display...");
-    if (its_CDisplay.set_ItsIArduino(p_ItsIArduino) != ERR_OK) {
+    if (itsC_Display.setItsArduinoInterface(pI_Arduino) != ERR_OK) {
         Serial.println("[INIT] ERR: Display wiring failed");
         return;
     }
 
     Serial.println("[INIT] Initialising Display...");
-    if (its_CDisplay.begin() != ERR_OK) {
+    if (itsC_Display.begin() != ERR_OK) {
         Serial.println("[INIT] ERR: Display init failed");
         return;
     }
 
-    I_Display* p_ItsIDisplay = its_CDisplay.get_ItsIDisplay();
-    p_ItsIDisplay->clear();
-    p_ItsIDisplay->printAt(0, 0, "Init...");
-    p_ItsIDisplay->printAt(0, 10, "Please wait");
-    p_ItsIDisplay->refresh();
+    I_Display* pI_Display = itsC_Display.getInterface();
+    pI_Display->clear();
+    pI_Display->printAt(0, 0, "Init...");
+    pI_Display->printAt(0, 1, "Please wait");
+    pI_Display->refresh();
 
     /* --- Begin DHT1 --- */
     Serial.println("[INIT] Initialising DHT1...");
-    if (its_CDHT1.begin() != ERR_OK) {
+    if (itsC_DHT1.begin() != ERR_OK) {
         Serial.println("[INIT] ERR: DHT1 init failed");
-        p_ItsIDisplay->clear();
-        p_ItsIDisplay->printAt(0, 0, "ERR: DHT1");
-        p_ItsIDisplay->refresh();
+        pI_Display->clear();
+        pI_Display->printAt(0, 0, "ERR: DHT1");
+        pI_Display->refresh();
         return;
     }
 
     /* --- Begin DHT2 --- */
     Serial.println("[INIT] Initialising DHT2...");
-    if (its_CDHT2.begin() != ERR_OK) {
+    if (itsC_DHT2.begin() != ERR_OK) {
         Serial.println("[INIT] ERR: DHT2 init failed");
-        p_ItsIDisplay->clear();
-        p_ItsIDisplay->printAt(0, 0, "ERR: DHT2");
-        p_ItsIDisplay->refresh();
+        pI_Display->clear();
+        pI_Display->printAt(0, 0, "ERR: DHT2");
+        pI_Display->refresh();
         return;
     }
 
     /* --- Wire Processor --- */
     Serial.println("[INIT] Wiring Processor...");
-    its_CProcessor.set_ItsIInternalDHT22(its_CDHT1.get_ItsIDHT22());
-    its_CProcessor.set_ItsIExternalDHT22(its_CDHT2.get_ItsIDHT22());
-    its_CProcessor.set_ItsIArduino(its_CArduino.get_ItsIArduino());
-    its_CProcessor.set_ItsIDisplay(its_CDisplay.get_ItsIDisplay());
+    itsC_Processor.setItsDHT22_1Interface(itsC_DHT1.getInterface());
+    itsC_Processor.setItsDHT22_2Interface(itsC_DHT2.getInterface());
+    itsC_Processor.setItsArduinoInterface(itsC_Arduino.getInterface());
+    itsC_Processor.setItsDisplayInterface(itsC_Display.getInterface());
 
     Serial.println("[INIT] Initialising Processor...");
-    if (its_CProcessor.begin() != ERR_OK) {
+    if (itsC_Processor.begin() != ERR_OK) {
         Serial.println("[INIT] ERR: Processor init failed");
-        p_ItsIDisplay->clear();
-        p_ItsIDisplay->printAt(0, 0, "ERR: Processor");
-        p_ItsIDisplay->refresh();
+        pI_Display->clear();
+        pI_Display->printAt(0, 0, "ERR: Processor");
+        pI_Display->refresh();
         return;
     }
 
     Serial.println("[INIT] All components initialised.");
-    p_ItsIDisplay->clear();
-    p_ItsIDisplay->printAt(0, 0, "System Ready");
-    p_ItsIDisplay->refresh();
+    pI_Display->clear();
+    pI_Display->printAt(0, 0, "System Ready");
+    pI_Display->refresh();
 
     state = BUILD_STATE_EXECUTE;
 }
@@ -836,7 +773,7 @@ void C_Build::doInitialise() {
    ============================================================ */
 
 void C_Build::doExecute() {
-    its_CProcessor.get_ItsIProcessor()->loop();
+    itsC_Processor.get_ItsIProcessor()->loop();
 }
 ===== C_DHT22.cpp =====
 #include "C_DHT22.h"
@@ -845,14 +782,14 @@ void C_Build::doExecute() {
    A_DHT22 (Adapter)
    ============================ */
 
-A_DHT22::A_DHT22(uint8_t pin, I_Arduino* p_IArduino)
+A_DHT22::A_DHT22(uint8_t pin, I_Arduino* pI_Arduino)
     : dht(pin, DHT22),
       pin(pin),
-      p_ItsIArduino(p_IArduino)
+      pItsArduinoInterface(pI_Arduino)
 {}
 
 void A_DHT22::begin() {
-    p_ItsIArduino->pinMode(pin, INPUT);
+    pItsArduinoInterface->pinMode(pin, INPUT);
     dht.begin();
 }
 
@@ -871,23 +808,22 @@ float A_DHT22::readHumidity() {
 
 C_DHT22::C_DHT22(uint8_t pin)
     : pin(pin),
-      p_ItsIArduino(nullptr),
-      itsADHT22(pin, nullptr),   // temporary, will be replaced
+      pItsArduinoInterface(nullptr),
+      itsAdapter(pin, nullptr),
       adapterReady(false)
 {}
 
 
-int C_DHT22::set_ItsIArduino(I_Arduino* p_IArduino) {
+int C_DHT22::setItsArduinoInterface(I_Arduino* p_IArduino) {
     if (!p_IArduino) return ERR_NULL_POINTER;
 
-    p_ItsIArduino = p_IArduino;
+    pItsArduinoInterface = p_IArduino;
 
     // Pin ownership handled by the Arduino adapter
-    int rc = p_ItsIArduino->requestPin(pin);
+    int rc = pItsArduinoInterface->requestPin(pin);
     if (rc != ERR_OK) return rc;
 
-    // Construct adapter safely (no heap)
-    itsADHT22 = A_DHT22(pin, p_ItsIArduino);
+    itsAdapter = A_DHT22(pin, pItsArduinoInterface);
     adapterReady = true;
 
     return ERR_OK;
@@ -896,20 +832,20 @@ int C_DHT22::set_ItsIArduino(I_Arduino* p_IArduino) {
 int C_DHT22::begin() {
     if (!adapterReady) return ERR_INVALID_STATE;
 
-    itsADHT22.begin();
+    itsAdapter.begin();
 
     // Minimal sanity check
-    float t = itsADHT22.readTemperature();
+    float t = itsAdapter.readTemperature();
     if (isnan(t)) return ERR_SENSOR_INIT_FAILED;
 
     return ERR_OK;
 }
 
-I_DHT22* C_DHT22::get_ItsIDHT22() {
-    return &itsADHT22;
+I_DHT22* C_DHT22::getInterface() {
+    return &itsAdapter;
 }
 
-C_DHT22* C_DHT22::get_ItsCDHT22() {
+C_DHT22* C_DHT22::getComponent() {
     return this;
 }
 ===== C_Display.cpp =====
@@ -917,32 +853,25 @@ C_DHT22* C_DHT22::get_ItsCDHT22() {
 
 C_Display::C_Display()
 #if USE_OLED_DISPLAY
-    : itsCOLED12864SSD1306(0x3C),
+    : itsC_OLED(0x3C),
       itsAdapter(nullptr)
 #else
-    : itsCLCD1602I2C(),
-      itsAdapter(nullptr)
+    : itsC_LCD()
 #endif
 {}
 
 
-int C_Display::set_ItsIArduino(I_Arduino* pIArduino) {
-    if (!pIArduino) return ERR_NULL_POINTER;
+int C_Display::setItsArduinoInterface(I_Arduino* pI_Arduino) {
+    if (!pI_Arduino) return ERR_NULL_POINTER;
 
-    p_ItsIArduino = pIArduino;
+    pItsI_Arduino = pI_Arduino;
 
 #if USE_OLED_DISPLAY
-    if (itsCOLED12864SSD1306.set_ItsIArduino(pIArduino) != ERR_OK)
+    if (itsC_OLED.set_ItsIArduino(pI_Arduino) != ERR_OK)
         return ERR_INVALID_STATE;
-
-    itsAdapter =
-        A_Display_OLED12864SSD1306(itsCOLED12864SSD1306.get_ItsIOLED12864SSD1306());
 #else
-    if (itsCLCD1602I2C.set_ItsIArduino(pIArduino) != ERR_OK)
+    if (itsC_LCD.setItsArduinoInterface(pI_Arduino) != ERR_OK)
         return ERR_INVALID_STATE;
-
-    itsAdapter =
-        A_Display_LCD1602I2C(itsCLCD1602I2C.get_ItsILCD1602());
 #endif
 
     return ERR_OK;
@@ -950,116 +879,122 @@ int C_Display::set_ItsIArduino(I_Arduino* pIArduino) {
 
 
 int C_Display::begin() {
-    if (!p_ItsIArduino) return ERR_INVALID_STATE;
+    if (!pItsI_Arduino) return ERR_INVALID_STATE;
 
 #if USE_OLED_DISPLAY
-    if (itsCOLED12864SSD1306.begin() != ERR_OK)
+    if (itsC_OLED.begin() != ERR_OK)
         return ERR_LCD_INIT_FAILED;
 
     itsAdapter.init();
 #else
-    if (itsCLCD1602I2C.begin() != ERR_OK)
+    if (itsC_LCD.begin() != ERR_OK)
         return ERR_LCD_INIT_FAILED;
 
-    itsAdapter.init();
+    pItsLCDInterface.init();
 #endif
 
 return ERR_OK;
 }
 
 
-I_Display* C_Display::get_ItsIDisplay() {
-    return &itsAdapter;
+I_Display* C_Display::getInterface() {
+    return pItsLCDInterface;
 }
 
-C_Display* C_Display::get_ItsCDisplay() {
+C_Display* C_Display::getComponent() {
     return this;
 }
-===== C_LCD1602I2C.cpp =====
-#include "C_LCD1602I2C.h"
+===== C_LCD.cpp =====
+#include "C_LCD.h"
 
 /* ============================
-   A_LCD1602 (Adapter)
+   A_LCD (Adapter)
    ============================ */
 
-A_LCD1602I2C::A_LCD1602I2C(uint8_t address,
+A_LCD::A_LCD(uint8_t address,
                      uint8_t cols,
                      uint8_t rows,
-                     I_Arduino* its_pArduino)
+                     I_Arduino* pItsI_Arduino)
     : lcd(address, cols, rows),
-      its_pArduino(its_pArduino) {}
+      pItsI_Arduino(pItsI_Arduino) {}
 
-void A_LCD1602I2C::init() {
+void A_LCD::init() {
     lcd.init();
     lcd.backlight();
 }
 
-void A_LCD1602I2C::clear() {
+void A_LCD::clear() {
     lcd.clear();
 }
 
-void A_LCD1602I2C::printAt(uint8_t col, uint8_t row, const String& text) {
+void A_LCD::printAt(uint8_t col, uint8_t row, const String& text) {
     lcd.setCursor(col, row);
     lcd.print(text);
 }
 
+void A_LCD::display() {
+    return;
+}
+
+void A_LCD::setTextSize(uint8_t size) {
+    return;
+}
 
 /* ============================
-   C_LCD1602I2C (Component)
+   C_LCD (Component)
    ============================ */
 
-C_LCD1602I2C::C_LCD1602I2C(uint8_t address,
+C_LCD::C_LCD(uint8_t address,
                            uint8_t cols,
                            uint8_t rows)
     : address(address),
       cols(cols),
       rows(rows),
-      p_ItsIArduino(nullptr),
-      its_ALCD1602I2C(address, cols, rows, nullptr) {}
+      pItsI_Arduino(nullptr),
+      itsAdapter(address, cols, rows, nullptr) {}
 
-int C_LCD1602I2C::set_ItsIArduino(I_Arduino* p) {
-    if (!p) return ERR_NULL_POINTER;
+int C_LCD::setItsArduinoInterface(I_Arduino* pI_Arduino) {
+    if (!pI_Arduino) return ERR_NULL_POINTER;
 
-    p_ItsIArduino = p;
+    pItsI_Arduino = pI_Arduino;
 
     // LCD does not require pin reservation (I2C uses fixed pins)
-    its_ALCD1602I2C = A_LCD1602I2C(address, cols, rows, p_ItsIArduino);
+    itsAdapter = A_LCD(address, cols, rows, pItsI_Arduino);
 
     return ERR_OK;
 }
 
-int C_LCD1602I2C::begin() {
-    if (!p_ItsIArduino) return ERR_INVALID_STATE;
+int C_LCD::begin() {
+    if (!pItsI_Arduino) return ERR_INVALID_STATE;
 
-    its_ALCD1602I2C.init();
-    its_ALCD1602I2C.clear();
+    itsAdapter.init();
+    itsAdapter.clear();
 
     return ERR_OK;
 }
 
-I_LCD1602I2C* C_LCD1602I2C::get_ItsILCD1602() {
-    return &its_ALCD1602I2C;
+I_LCD* C_LCD::getInterface() {
+    return &itsAdapter;
 }
 
-C_LCD1602I2C* C_LCD1602I2C::get_ItsCLCD1602() {
+C_LCD* C_LCD::getComponent() {
     return this;
 }
-===== C_OLED12864SSD1306.cpp =====
-#include "C_OLED12864SSD1306.h"
+===== C_OLED.cpp =====
+#include "C_OLED.h"
 
 /* ============================
-   A_OLED12864SSD1306 (Adapter)
+   Adapter (Adapter)
    ============================ */
 
-A_OLED12864SSD1306::A_OLED12864SSD1306(uint8_t address,
-                                         I_Arduino* its_pArduino)
+A_OLED::A_OLED(uint8_t address, I_Arduino* pI_Arduino)
     : oled(128, 64, &Wire, -1),
-      p_ItsIArduino(its_pArduino)
+      pItsArduinoInterface(pI_Arduino)
 {
     Wire.begin();   // I2C init
 }
 
-void A_OLED12864SSD1306::init() {
+void A_OLED::init() {
     if (!oled.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
         // No LCD error code exists for OLED, so use generic sensor init failure
         return;
@@ -1070,57 +1005,57 @@ void A_OLED12864SSD1306::init() {
     oled.setTextColor(SSD1306_WHITE);
 }
 
-void A_OLED12864SSD1306::clear() {
+void A_OLED::clear() {
     oled.clearDisplay();
 }
 
-void A_OLED12864SSD1306::printAt(uint8_t x, uint8_t y, const String& text) {
+void A_OLED::printAt(uint8_t x, uint8_t y, const String& text) {
     oled.setCursor(x, y);
     oled.print(text);
 }
 
-void A_OLED12864SSD1306::display() {
+void A_OLED::display() {
     oled.display();
 }
 
-void A_OLED12864SSD1306::setTextSize(uint8_t size) {
+void A_OLED::setTextSize(uint8_t size) {
     oled.setTextSize(size);
 }
 
 /* ============================
-   C_OLED12864SSD1306 (Component)
+   C_OLED (Component)
    ============================ */
 
-C_OLED12864SSD1306::C_OLED12864SSD1306(uint8_t address)
+C_OLED::C_OLED(uint8_t address)
     : address(address),
-      p_ItsIArduino(nullptr),
-      its_AOLED12864SSD1306(address, nullptr)
+      pItsArduinoInterface(nullptr),
+      itsAdapter(address, nullptr)
 {}
 
-int C_OLED12864SSD1306::set_ItsIArduino(I_Arduino* pIArduino) {
+int C_OLED::set_ItsIArduino(I_Arduino* pIArduino) {
     if (!pIArduino) return ERR_NULL_POINTER;
 
-    p_ItsIArduino = pIArduino;
-    its_AOLED12864SSD1306 = A_OLED12864SSD1306(address, p_ItsIArduino);
+    pItsArduinoInterface = pIArduino;
+    itsAdapter = A_OLED(address, pItsArduinoInterface);
 
     return ERR_OK;
 }
 
-int C_OLED12864SSD1306::begin() {
-    if (!p_ItsIArduino) return ERR_INVALID_STATE;
+int C_OLED::begin() {
+    if (!pItsArduinoInterface) return ERR_INVALID_STATE;
 
-    its_AOLED12864SSD1306.init();
-    its_AOLED12864SSD1306.clear();
-    its_AOLED12864SSD1306.display();
+    itsAdapter.init();
+    itsAdapter.clear();
+    itsAdapter.display();
 
     return ERR_OK;
 }
 
-I_OLED12864SSD1306* C_OLED12864SSD1306::get_ItsIOLED12864SSD1306() {
-    return &its_AOLED12864SSD1306;
+I_OLED* C_OLED::get_ItsIOLED() {
+    return &itsAdapter;
 }
 
-C_OLED12864SSD1306* C_OLED12864SSD1306::get_ItsCOLED12864SSD1306() {
+C_OLED* C_OLED::get_ItsCOLED() {
     return this;
 }
 ===== C_Processor.cpp =====
@@ -1130,40 +1065,40 @@ C_OLED12864SSD1306* C_OLED12864SSD1306::get_ItsCOLED12864SSD1306() {
    A_Processor (Adapter)
    ============================ */
 
-A_Processor::A_Processor(I_DHT22* its_pInternal,
-                         I_DHT22* its_pExternal,
-                         I_Display* its_pDisplay,
-                         I_Arduino* its_pArduino)
-    : p_ItsIDHT22_1(its_pInternal),
-      p_ItsIDHT22_2(its_pExternal),
-      p_ItsIDisplay(its_pDisplay),
-      p_ItsIArduino(its_pArduino),
+A_Processor::A_Processor(I_DHT22* pI_DHT22_1,
+                         I_DHT22* pI_DHT22_2,
+                         I_Display* pI_Display,
+                         I_Arduino* pI_Arduino)
+    : pItsDHT22_1Interface(pI_DHT22_1),
+      pItsDHT22_2Interface(pI_DHT22_2),
+      pItsDisplayInterface(pI_Display),
+      pItsArduinoInterface(pI_Arduino),
       lastSample(0)
 {}
 
 void A_Processor::loop() {
-    if (!p_ItsIDHT22_1 || !p_ItsIDHT22_2 || !p_ItsIDisplay || !p_ItsIArduino) {
-        p_ItsIDisplay->clear();
-        p_ItsIDisplay->printAt(0, 0, "ERR: Ports");
-        p_ItsIDisplay->printAt(0, 10, "not wired");
-        p_ItsIDisplay->refresh();
+    if (!pItsDHT22_1Interface || !pItsDHT22_2Interface || !pItsDisplayInterface || !pItsArduinoInterface) {
+        pItsDisplayInterface->clear();
+        pItsDisplayInterface->printAt(0, 0, "ERR: Ports");
+        pItsDisplayInterface->printAt(0, 10, "not wired");
+        pItsDisplayInterface->refresh();
         return;
     }
 
-    unsigned long now = p_ItsIArduino->millis();
+    unsigned long now = pItsArduinoInterface->millis();
     if (now - lastSample < 10000) return;
     lastSample = now;
 
-    float t1 = p_ItsIDHT22_1->readTemperature();
-    float h1 = p_ItsIDHT22_1->readHumidity();
-    float t2 = p_ItsIDHT22_2->readTemperature();
-    float h2 = p_ItsIDHT22_2->readHumidity();
+    float t1 = pItsDHT22_1Interface->readTemperature();
+    float h1 = pItsDHT22_1Interface->readHumidity();
+    float t2 = pItsDHT22_2Interface->readTemperature();
+    float h2 = pItsDHT22_2Interface->readHumidity();
 
     if (isnan(t1) || isnan(h1) || isnan(t2) || isnan(h2)) {
-        p_ItsIDisplay->clear();
-        p_ItsIDisplay->printAt(0, 0, "ERR: Sensor");
-        p_ItsIDisplay->printAt(0, 10, "read fail");
-        p_ItsIDisplay->refresh();
+        pItsDisplayInterface->clear();
+        pItsDisplayInterface->printAt(0, 0, "ERR: Sensor");
+        pItsDisplayInterface->printAt(0, 10, "read fail");
+        pItsDisplayInterface->refresh();
         return;
     }
 
@@ -1179,35 +1114,35 @@ void A_Processor::loop() {
         return String(t, 1) + "C";
     };
 
-    p_ItsIDisplay->clear();
+    pItsDisplayInterface->clear();
 
-    switch (p_ItsIDisplay->getDisplayType()) {
+    switch (pItsDisplayInterface->getDisplayType()) {
 
-        case DISPLAY_LCD1602I2C:
+        case DISPLAY_LCD:
             // LCD: 2 rows, character grid
-            p_ItsIDisplay->printAt(0, 0, "T:" + fmtTemp(t1) + "/" + fmtTemp(t2));
-            p_ItsIDisplay->printAt(0, 1, "H:" + fmtHum(h1) + "/" + fmtHum(h2));
+            pItsDisplayInterface->printAt(0, 0, "T:" + fmtTemp(t1) + "/" + fmtTemp(t2));
+            pItsDisplayInterface->printAt(0, 1, "H:" + fmtHum(h1) + "/" + fmtHum(h2));
             break;
 
-        case DISPLAY_OLED12864SSD1306:
+        case DISPLAY_OLED:
             // OLED: 128x64 pixels, 8px text height
-            p_ItsIDisplay->printAt(0, 0,  "T1: " + fmtTemp(t1));
-            p_ItsIDisplay->printAt(0, 10, "T2: " + fmtTemp(t2));
-            p_ItsIDisplay->printAt(0, 20, "H1: " + fmtHum(h1));
-            p_ItsIDisplay->printAt(0, 30, "H2: " + fmtHum(h2));
+            pItsDisplayInterface->printAt(0, 0,  "T1: " + fmtTemp(t1));
+            pItsDisplayInterface->printAt(0, 10, "T2: " + fmtTemp(t2));
+            pItsDisplayInterface->printAt(0, 20, "H1: " + fmtHum(h1));
+            pItsDisplayInterface->printAt(0, 30, "H2: " + fmtHum(h2));
             break;
     }
 
-    p_ItsIDisplay->refresh();
+    pItsDisplayInterface->refresh();
 
-    p_ItsIArduino->serialPrint("T1:");
-    p_ItsIArduino->serialPrint(String(t1, 1));
-    p_ItsIArduino->serialPrint(",H1:");
-    p_ItsIArduino->serialPrint(String(h1, 1));
-    p_ItsIArduino->serialPrint(",T2:");
-    p_ItsIArduino->serialPrint(String(t2, 1));
-    p_ItsIArduino->serialPrint(",H2:");
-    p_ItsIArduino->serialPrintLn(String(h2, 1));
+    pItsArduinoInterface->serialPrint("T1:");
+    pItsArduinoInterface->serialPrint(String(t1, 1));
+    pItsArduinoInterface->serialPrint(",H1:");
+    pItsArduinoInterface->serialPrint(String(h1, 1));
+    pItsArduinoInterface->serialPrint(",T2:");
+    pItsArduinoInterface->serialPrint(String(t2, 1));
+    pItsArduinoInterface->serialPrint(",H2:");
+    pItsArduinoInterface->serialPrintLn(String(h2, 1));
 }
 
 
@@ -1216,45 +1151,45 @@ void A_Processor::loop() {
    ============================ */
 
 C_Processor::C_Processor()
-    : p_ItsIDHT22_1(nullptr),
-      p_ItsIDHT22_2(nullptr),
-      p_ItsIDisplay(nullptr),
-      p_ItsIArduino(nullptr),
+    : pItsDHT22_1Interface(nullptr),
+      pItsDHT22_2Interface(nullptr),
+      pItsDisplayInterface(nullptr),
+      pItsArduinoInterface(nullptr),
       itsAdapter(nullptr, nullptr, nullptr, nullptr)
 {}
 
-int C_Processor::set_ItsIInternalDHT22(I_DHT22* pIDHT22) {
-    if (!pIDHT22) return ERR_NULL_POINTER;
-    p_ItsIDHT22_1 = pIDHT22;
+int C_Processor::setItsDHT22_1Interface(I_DHT22* pI_DHT22) {
+    if (!pI_DHT22) return ERR_NULL_POINTER;
+    pItsDHT22_1Interface = pI_DHT22;
     return ERR_OK;
 }
 
-int C_Processor::set_ItsIExternalDHT22(I_DHT22* pIDHT22) {
-    if (!pIDHT22) return ERR_NULL_POINTER;
-    p_ItsIDHT22_2 = pIDHT22;
+int C_Processor::setItsDHT22_2Interface(I_DHT22* pI_DHT22) {
+    if (!pI_DHT22) return ERR_NULL_POINTER;
+    pItsDHT22_2Interface = pI_DHT22;
     return ERR_OK;
 }
 
-int C_Processor::set_ItsIDisplay(I_Display* pIDisplay) {
-    if (!pIDisplay) return ERR_NULL_POINTER;
-    p_ItsIDisplay = pIDisplay;
+int C_Processor::setItsDisplayInterface(I_Display* pI_Display) {
+    if (!pI_Display) return ERR_NULL_POINTER;
+    pItsDisplayInterface = pI_Display;
     return ERR_OK;
 }
 
-int C_Processor::set_ItsIArduino(I_Arduino* pIArduino) {
-    if (!pIArduino) return ERR_NULL_POINTER;
-    p_ItsIArduino = pIArduino;
+int C_Processor::setItsArduinoInterface(I_Arduino* pI_Arduino) {
+    if (!pI_Arduino) return ERR_NULL_POINTER;
+    pItsArduinoInterface = pI_Arduino;
     return ERR_OK;
 }
 
 int C_Processor::begin() {
-    if (!p_ItsIDHT22_1 || !p_ItsIDHT22_2 || !p_ItsIDisplay || !p_ItsIArduino)
+    if (!pItsDHT22_1Interface || !pItsDHT22_2Interface || !pItsDisplayInterface || !pItsArduinoInterface)
         return ERR_INVALID_STATE;
 
-    itsAdapter = A_Processor(p_ItsIDHT22_1,
-                              p_ItsIDHT22_2,
-                              p_ItsIDisplay,
-                              p_ItsIArduino);
+    itsAdapter = A_Processor(pItsDHT22_1Interface,
+                              pItsDHT22_2Interface,
+                              pItsDisplayInterface,
+                              pItsArduinoInterface);
     return ERR_OK;
 }
 

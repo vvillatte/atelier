@@ -1,24 +1,26 @@
 #ifndef _C_DISPLAY_H
 #define _C_DISPLAY_H
 
-// Select which display to use
-#define USE_OLED_DISPLAY   0   // 1 = OLED12864SSD1306, 0 = LCD1602I2C
+// Select which display backend to use
+// #define USE_OLED_DISPLAY 0   // 1 = OLED, 0 = LCD
 
 #include "C_Arduino.h"
-#if USE_OLED_DISPLAY
-#include "C_OLED12864SSD1306.h"
-#else
-#include "C_LCD1602I2C.h"
-#endif
 #include "ErrorCodes.h"
+
+#if USE_OLED_DISPLAY
+    #include <Adafruit_GFX.h>
+    #include <Adafruit_SSD1306.h>
+#else
+    #include <LiquidCrystal_I2C.h>
+#endif
 
 /* ============================
    DisplayType enum
    ============================ */
 
 enum DisplayType {
-    DISPLAY_LCD1602I2C,
-    DISPLAY_OLED12864SSD1306
+    DISPLAY_LCD,
+    DISPLAY_OLED
 };
 
 /* ============================
@@ -37,83 +39,29 @@ public:
     virtual DisplayType getDisplayType() const = 0;
 };
 
+/* ============================
+   A_Display (Unified Adapter)
+   ============================ */
+
+class A_Display : public I_Display {
+public:
+    A_Display();
+
+    void init() override;
+    void clear() override;
+    void printAt(uint8_t x, uint8_t y, const String& text) override;
+    void refresh() override;
+    void setTextSize(uint8_t size) override;
+    DisplayType getDisplayType() const override;
 
 #if USE_OLED_DISPLAY
-/* ============================
-   A_OLED12864SSD1306 (Adapter)
-   ============================ */
-class A_Display_OLED12864SSD1306 : public I_Display {
-public:
-    A_Display_OLED12864SSD1306(I_OLED12864SSD1306* oled) : p_ItsIOLED12864SSD1306(oled) {}
-
-    void init() override {
-        p_ItsIOLED12864SSD1306->init();
-        p_ItsIOLED12864SSD1306->clear();
-        p_ItsIOLED12864SSD1306->display();
-    }
-
-    void clear() override {
-        p_ItsIOLED12864SSD1306->clear();
-    }
-
-    void printAt(uint8_t x, uint8_t y, const String& text) override {
-        p_ItsIOLED12864SSD1306->printAt(x, y, text);
-    }
-
-    void refresh() override {
-        p_ItsIOLED12864SSD1306->display();
-    }
-
-    void setTextSize(uint8_t size) override {
-        p_ItsIOLED12864SSD1306->setTextSize(size);
-    }
-
-    DisplayType getDisplayType() const override {
-        return DISPLAY_OLED12864SSD1306;
-    }
-
 private:
-    I_OLED12864SSD1306* p_ItsIOLED12864SSD1306;
-};
+    Adafruit_SSD1306 oled;
 #else
-/* ============================
-   A_Display_LCD1602 (Adapter)
-   ============================ */
-
-class A_Display_LCD1602I2C : public I_Display {
-public:
-    A_Display_LCD1602I2C(I_LCD1602I2C* pILCD1602I2C) : p_ItsILCD1602I2C(pILCD1602I2C) {}
-
-    void init() override {
-        p_ItsILCD1602I2C->init();
-        p_ItsILCD1602I2C->clear();
-    }
-
-    void clear() override {
-        p_ItsILCD1602I2C->clear();
-    }
-
-    void printAt(uint8_t x, uint8_t y, const String& text) override {
-        p_ItsILCD1602I2C->printAt(x, y, text);
-    }
-
-    void refresh() override {
-        // LCD1602 does not need a refresh - NOOP
-    }
-
-    void setTextSize(uint8_t size) override {
-        // LCD1602 does not support text scaling — NOOP
-    }
-
-    DisplayType getDisplayType() const override {
-        return DISPLAY_LCD1602I2C;
-    }
-
 private:
-    I_LCD1602I2C* p_ItsILCD1602I2C;
-};
+    LiquidCrystal_I2C lcd;
 #endif
-
+};
 
 /* ============================
    C_Display (Component)
@@ -123,22 +71,15 @@ class C_Display {
 public:
     C_Display();
 
-    int set_ItsIArduino(I_Arduino* pIArduino);
+    int setItsArduinoInterface(I_Arduino* pI_Arduino);
     int begin();
 
-    I_Display* get_ItsIDisplay();
-    C_Display* get_ItsCDisplay();
+    I_Display* getInterface();
+    C_Display* getComponent();
 
 private:
-    I_Arduino* p_ItsIArduino = nullptr;
-
-#if USE_OLED_DISPLAY
-    C_OLED12864SSD1306 itsCOLED12864SSD1306;
-    A_Display_OLED12864SSD1306 itsAdapter;
-#else
-    C_LCD1602I2C itsCLCD1602I2C;
-    A_Display_LCD1602I2C itsAdapter;
-#endif
+    I_Arduino* pItsI_Arduino = nullptr;
+    A_Display itsAdapter;
 };
 
 #endif

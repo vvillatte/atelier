@@ -33,7 +33,7 @@ public:
 private:
     DHT dht;
     uint8_t pin;
-    I_Arduino* p_ItsIArduino;
+    I_Arduino* pItsArduinoInterface = nullptr;
 };
 
 
@@ -45,17 +45,17 @@ class C_DHT22 {
 public:
     C_DHT22(uint8_t pin);
 
-    int set_ItsIArduino(I_Arduino* p);
+    int setItsArduinoInterface(I_Arduino* p);
     int begin();
 
-    I_DHT22* get_ItsIDHT22();
-    C_DHT22* get_ItsCDHT22();
+    I_DHT22* getInterface();
+    C_DHT22* getComponent();
 
 private:
     uint8_t pin;
 
-    I_Arduino* p_ItsIArduino = nullptr;
-    A_DHT22 itsADHT22;
+    I_Arduino* pItsArduinoInterface = nullptr;
+    A_DHT22 itsAdapter;
     bool adapterReady = false;
 };
 

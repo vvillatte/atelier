@@ -4,40 +4,40 @@
    A_Processor (Adapter)
    ============================ */
 
-A_Processor::A_Processor(I_DHT22* its_pInternal,
-                         I_DHT22* its_pExternal,
-                         I_Display* its_pDisplay,
-                         I_Arduino* its_pArduino)
-    : p_ItsIDHT22_1(its_pInternal),
-      p_ItsIDHT22_2(its_pExternal),
-      p_ItsIDisplay(its_pDisplay),
-      p_ItsIArduino(its_pArduino),
+A_Processor::A_Processor(I_DHT22* pI_DHT22_1,
+                         I_DHT22* pI_DHT22_2,
+                         I_Display* pI_Display,
+                         I_Arduino* pI_Arduino)
+    : pItsDHT22_1Interface(pI_DHT22_1),
+      pItsDHT22_2Interface(pI_DHT22_2),
+      pItsDisplayInterface(pI_Display),
+      pItsArduinoInterface(pI_Arduino),
       lastSample(0)
 {}
 
 void A_Processor::loop() {
-    if (!p_ItsIDHT22_1 || !p_ItsIDHT22_2 || !p_ItsIDisplay || !p_ItsIArduino) {
-        p_ItsIDisplay->clear();
-        p_ItsIDisplay->printAt(0, 0, "ERR: Ports");
-        p_ItsIDisplay->printAt(0, 10, "not wired");
-        p_ItsIDisplay->refresh();
+    if (!pItsDHT22_1Interface || !pItsDHT22_2Interface || !pItsDisplayInterface || !pItsArduinoInterface) {
+        pItsDisplayInterface->clear();
+        pItsDisplayInterface->printAt(0, 0, "ERR: Ports");
+        pItsDisplayInterface->printAt(0, 10, "not wired");
+        pItsDisplayInterface->refresh();
         return;
     }
 
-    unsigned long now = p_ItsIArduino->millis();
+    unsigned long now = pItsArduinoInterface->millis();
     if (now - lastSample < 10000) return;
     lastSample = now;
 
-    float t1 = p_ItsIDHT22_1->readTemperature();
-    float h1 = p_ItsIDHT22_1->readHumidity();
-    float t2 = p_ItsIDHT22_2->readTemperature();
-    float h2 = p_ItsIDHT22_2->readHumidity();
+    float t1 = pItsDHT22_1Interface->readTemperature();
+    float h1 = pItsDHT22_1Interface->readHumidity();
+    float t2 = pItsDHT22_2Interface->readTemperature();
+    float h2 = pItsDHT22_2Interface->readHumidity();
 
     if (isnan(t1) || isnan(h1) || isnan(t2) || isnan(h2)) {
-        p_ItsIDisplay->clear();
-        p_ItsIDisplay->printAt(0, 0, "ERR: Sensor");
-        p_ItsIDisplay->printAt(0, 10, "read fail");
-        p_ItsIDisplay->refresh();
+        pItsDisplayInterface->clear();
+        pItsDisplayInterface->printAt(0, 0, "ERR: Sensor");
+        pItsDisplayInterface->printAt(0, 10, "read fail");
+        pItsDisplayInterface->refresh();
         return;
     }
 
@@ -53,35 +53,35 @@ void A_Processor::loop() {
         return String(t, 1) + "C";
     };
 
-    p_ItsIDisplay->clear();
+    pItsDisplayInterface->clear();
 
-    switch (p_ItsIDisplay->getDisplayType()) {
+    switch (pItsDisplayInterface->getDisplayType()) {
 
-        case DISPLAY_LCD1602I2C:
+        case DISPLAY_LCD:
             // LCD: 2 rows, character grid
-            p_ItsIDisplay->printAt(0, 0, "T:" + fmtTemp(t1) + "/" + fmtTemp(t2));
-            p_ItsIDisplay->printAt(0, 1, "H:" + fmtHum(h1) + "/" + fmtHum(h2));
+            pItsDisplayInterface->printAt(0, 0, "T:" + fmtTemp(t1) + "/" + fmtTemp(t2));
+            pItsDisplayInterface->printAt(0, 1, "H:" + fmtHum(h1) + "/" + fmtHum(h2));
             break;
 
-        case DISPLAY_OLED12864SSD1306:
+        case DISPLAY_OLED:
             // OLED: 128x64 pixels, 8px text height
-            p_ItsIDisplay->printAt(0, 0,  "T1: " + fmtTemp(t1));
-            p_ItsIDisplay->printAt(0, 10, "T2: " + fmtTemp(t2));
-            p_ItsIDisplay->printAt(0, 20, "H1: " + fmtHum(h1));
-            p_ItsIDisplay->printAt(0, 30, "H2: " + fmtHum(h2));
+            pItsDisplayInterface->printAt(0, 0,  "T1: " + fmtTemp(t1));
+            pItsDisplayInterface->printAt(0, 10, "T2: " + fmtTemp(t2));
+            pItsDisplayInterface->printAt(0, 20, "H1: " + fmtHum(h1));
+            pItsDisplayInterface->printAt(0, 30, "H2: " + fmtHum(h2));
             break;
     }
 
-    p_ItsIDisplay->refresh();
+    pItsDisplayInterface->refresh();
 
-    p_ItsIArduino->serialPrint("T1:");
-    p_ItsIArduino->serialPrint(String(t1, 1));
-    p_ItsIArduino->serialPrint(",H1:");
-    p_ItsIArduino->serialPrint(String(h1, 1));
-    p_ItsIArduino->serialPrint(",T2:");
-    p_ItsIArduino->serialPrint(String(t2, 1));
-    p_ItsIArduino->serialPrint(",H2:");
-    p_ItsIArduino->serialPrintLn(String(h2, 1));
+    pItsArduinoInterface->serialPrint("T1:");
+    pItsArduinoInterface->serialPrint(String(t1, 1));
+    pItsArduinoInterface->serialPrint(",H1:");
+    pItsArduinoInterface->serialPrint(String(h1, 1));
+    pItsArduinoInterface->serialPrint(",T2:");
+    pItsArduinoInterface->serialPrint(String(t2, 1));
+    pItsArduinoInterface->serialPrint(",H2:");
+    pItsArduinoInterface->serialPrintLn(String(h2, 1));
 }
 
 
@@ -90,45 +90,45 @@ void A_Processor::loop() {
    ============================ */
 
 C_Processor::C_Processor()
-    : p_ItsIDHT22_1(nullptr),
-      p_ItsIDHT22_2(nullptr),
-      p_ItsIDisplay(nullptr),
-      p_ItsIArduino(nullptr),
+    : pItsDHT22_1Interface(nullptr),
+      pItsDHT22_2Interface(nullptr),
+      pItsDisplayInterface(nullptr),
+      pItsArduinoInterface(nullptr),
       itsAdapter(nullptr, nullptr, nullptr, nullptr)
 {}
 
-int C_Processor::set_ItsIInternalDHT22(I_DHT22* pIDHT22) {
-    if (!pIDHT22) return ERR_NULL_POINTER;
-    p_ItsIDHT22_1 = pIDHT22;
+int C_Processor::setItsDHT22_1Interface(I_DHT22* pI_DHT22) {
+    if (!pI_DHT22) return ERR_NULL_POINTER;
+    pItsDHT22_1Interface = pI_DHT22;
     return ERR_OK;
 }
 
-int C_Processor::set_ItsIExternalDHT22(I_DHT22* pIDHT22) {
-    if (!pIDHT22) return ERR_NULL_POINTER;
-    p_ItsIDHT22_2 = pIDHT22;
+int C_Processor::setItsDHT22_2Interface(I_DHT22* pI_DHT22) {
+    if (!pI_DHT22) return ERR_NULL_POINTER;
+    pItsDHT22_2Interface = pI_DHT22;
     return ERR_OK;
 }
 
-int C_Processor::set_ItsIDisplay(I_Display* pIDisplay) {
-    if (!pIDisplay) return ERR_NULL_POINTER;
-    p_ItsIDisplay = pIDisplay;
+int C_Processor::setItsDisplayInterface(I_Display* pI_Display) {
+    if (!pI_Display) return ERR_NULL_POINTER;
+    pItsDisplayInterface = pI_Display;
     return ERR_OK;
 }
 
-int C_Processor::set_ItsIArduino(I_Arduino* pIArduino) {
-    if (!pIArduino) return ERR_NULL_POINTER;
-    p_ItsIArduino = pIArduino;
+int C_Processor::setItsArduinoInterface(I_Arduino* pI_Arduino) {
+    if (!pI_Arduino) return ERR_NULL_POINTER;
+    pItsArduinoInterface = pI_Arduino;
     return ERR_OK;
 }
 
 int C_Processor::begin() {
-    if (!p_ItsIDHT22_1 || !p_ItsIDHT22_2 || !p_ItsIDisplay || !p_ItsIArduino)
+    if (!pItsDHT22_1Interface || !pItsDHT22_2Interface || !pItsDisplayInterface || !pItsArduinoInterface)
         return ERR_INVALID_STATE;
 
-    itsAdapter = A_Processor(p_ItsIDHT22_1,
-                              p_ItsIDHT22_2,
-                              p_ItsIDisplay,
-                              p_ItsIArduino);
+    itsAdapter = A_Processor(pItsDHT22_1Interface,
+                              pItsDHT22_2Interface,
+                              pItsDisplayInterface,
+                              pItsArduinoInterface);
     return ERR_OK;
 }
 

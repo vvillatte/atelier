@@ -1,5 +1,5 @@
-#ifndef _C_OLED12864SSD1306_H
-#define _C_OLED12864SSD1306_H
+#ifndef _C_OLED_H
+#define _C_OLED_H
 
 #include "C_Arduino.h"
 #include "ErrorCodes.h"
@@ -8,12 +8,12 @@
 #include <Adafruit_SSD1306.h>
 
 /* ============================
-   I_OLED12864SSD1306 (Interface)
+   I_OLED (Interface)
    ============================ */
 
-class I_OLED12864SSD1306 {
+class I_OLED {
 public:
-    virtual ~I_OLED12864SSD1306() = default;
+    virtual ~I_OLED() = default;
 
     virtual void init() = 0;
     virtual void clear() = 0;
@@ -24,13 +24,13 @@ public:
 
 
 /* ============================
-   A_OLED12864SSD1306 (Adapter)
+   A_OLED (Adapter)
    ============================ */
 
-class A_OLED12864SSD1306 : public I_OLED12864SSD1306 {
+class A_OLED : public I_OLED {
 public:
-    A_OLED12864SSD1306(uint8_t address,
-                        I_Arduino* its_pArduino);
+    A_OLED(uint8_t address,
+                      I_Arduino* its_pArduino);
 
     void init() override;
     void clear() override;
@@ -40,28 +40,28 @@ public:
 
 private:
     Adafruit_SSD1306 oled;
-    I_Arduino* p_ItsIArduino;
+    I_Arduino* pItsArduinoInterface = nullptr;
 };
 
 
 /* ============================
-   C_OLED12864SSD1306 (Component)
+   C_OLED (Component)
    ============================ */
 
-class C_OLED12864SSD1306 {
+class C_OLED {
 public:
-    C_OLED12864SSD1306(uint8_t address = 0x3C);
+    C_OLED(uint8_t address = 0x3C);
 
     int set_ItsIArduino(I_Arduino* pIArduino);
     int begin();
 
-    I_OLED12864SSD1306* get_ItsIOLED12864SSD1306();
-    C_OLED12864SSD1306* get_ItsCOLED12864SSD1306();
+    I_OLED* get_ItsIOLED();
+    C_OLED* get_ItsCOLED();
 
 private:
     uint8_t address;
-    I_Arduino* p_ItsIArduino = nullptr;
-    A_OLED12864SSD1306 its_AOLED12864SSD1306;
+    I_Arduino* pItsArduinoInterface = nullptr;
+    A_OLED itsAdapter;
 };
 
 #endif
