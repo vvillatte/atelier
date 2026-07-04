@@ -1,9 +1,6 @@
 #ifndef _C_DISPLAY_H
 #define _C_DISPLAY_H
 
-// Select which display backend to use
-// #define USE_OLED_DISPLAY 0   // 1 = OLED, 0 = LCD
-
 #include "C_Arduino.h"
 #include "ErrorCodes.h"
 
@@ -57,6 +54,7 @@ public:
 #if USE_OLED_DISPLAY
 private:
     Adafruit_SSD1306 oled;
+    bool oledReady = false;
 #else
 private:
     LiquidCrystal_I2C lcd;

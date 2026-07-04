@@ -59,8 +59,8 @@ void A_Processor::loop() {
 
         case DISPLAY_LCD:
             // LCD: 2 rows, character grid
-            pItsDisplayInterface->printAt(0, 0, "T:" + fmtTemp(t1) + "/" + fmtTemp(t2));
-            pItsDisplayInterface->printAt(0, 1, "H:" + fmtHum(h1) + "/" + fmtHum(h2));
+            pItsDisplayInterface->printAt(0, 0, "T:" + fmtTemp(t1) + " / " + fmtTemp(t2));
+            pItsDisplayInterface->printAt(0, 1, "H:" + fmtHum(h1) + " / " + fmtHum(h2));
             break;
 
         case DISPLAY_OLED:

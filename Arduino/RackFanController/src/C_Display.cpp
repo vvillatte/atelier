@@ -6,21 +6,20 @@
 
 A_Display::A_Display()
 #if USE_OLED_DISPLAY
-    : oled(128, 64, &Wire, -1)
+    : oled(128, 64, &Wire)
 #else
     : lcd(0x27, 16, 2)
 #endif
-{
-#if USE_OLED_DISPLAY
-    Wire.begin();
-#endif
-}
+{}
 
 void A_Display::init() {
 #if USE_OLED_DISPLAY
+    Wire.begin();
     if (!oled.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+        Serial.println("[DISPLAY] OLED init failed");
         return;
     }
+    oledReady = true;
     oled.clearDisplay();
     oled.setTextSize(1);
     oled.setTextColor(SSD1306_WHITE);
